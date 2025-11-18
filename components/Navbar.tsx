@@ -1,31 +1,30 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
-import { useMemo } from 'react'
-
-// Mock data - trong thực tế sẽ lấy từ API hoặc database
-// Sản phẩm nhôm kính chính
-const products = [
-  { id: 1, name: "Cửa Nhôm Xingfa" },
-  { id: 2, name: "Cửa Nhôm Việt Pháp" },
-  { id: 3, name: "Cửa Nhôm Kính Cường Lực" },
-  { id: 4, name: "Vách Kính Cường Lực" },
-  { id: 5, name: "Cửa Lùa Nhôm Kính" },
-  { id: 6, name: "Cửa Mở Quay Nhôm Kính" }
-]
-
-// Danh mục sản phẩm nhôm kính
-const categories = [
-  { id: 1, name: "Cửa Nhôm Kính" },
-  { id: 2, name: "Vách Kính" },
-  { id: 3, name: "Mái Kính" }
-]
+import { useEffect, useState, useMemo } from 'react'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { products as productSource, productCategories } from '@/constants/products'
 
 export default function Navbar() {
   const router = useRouter()
+  const { language, setLanguage, dictionary } = useLanguage()
+  const navContent = dictionary.navbar
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearchResults, setShowSearchResults] = useState(false)
-  const [currentLang, setCurrentLang] = useState('vi')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const localizedProducts = useMemo(() => productSource.map(product => ({
+    id: product.id,
+    name: product.name[language],
+    description: product.description[language],
+    image: product.image,
+    categoryId: product.categoryId
+  })), [language])
+
+  const localizedCategories = useMemo(() => productCategories.map(category => ({
+    id: category.id,
+    name: category.name[language],
+    description: category.description[language]
+  })), [language])
 
   const isActive = (path: string) => {
     return router.pathname === path ? 'active' : ''
@@ -34,17 +33,19 @@ export default function Navbar() {
   // Search functionality
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return { products: [], categories: [] }
-    
+
     const query = searchQuery.toLowerCase()
-    const matchedProducts = products.filter(p => 
-      p.name.toLowerCase().includes(query)
+    const matchedProducts = localizedProducts.filter(p =>
+      p.name.toLowerCase().includes(query) ||
+      p.description.toLowerCase().includes(query)
     )
-    const matchedCategories = categories.filter(c => 
-      c.name.toLowerCase().includes(query)
+    const matchedCategories = localizedCategories.filter(c =>
+      c.name.toLowerCase().includes(query) ||
+      c.description.toLowerCase().includes(query)
     )
-    
-    return { products: matchedProducts, categories: matchedCategories }
-  }, [searchQuery])
+
+    return { products: matchedProducts.slice(0, 6), categories: matchedCategories.slice(0, 6) }
+  }, [searchQuery, localizedProducts, localizedCategories])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,18 +60,14 @@ export default function Navbar() {
     router.push(`/product/${productId}`)
     setSearchQuery('')
     setShowSearchResults(false)
+    handleNavItemClick()
   }
 
   const handleCategoryClick = (categoryId: number) => {
     router.push(`/category/${categoryId}`)
     setSearchQuery('')
     setShowSearchResults(false)
-  }
-
-  const changeLanguage = (lang: string) => {
-    setCurrentLang(lang)
-    // TODO: Implement language change logic
-    // This could involve updating i18n context or router locale
+    handleNavItemClick()
   }
 
   useEffect(() => {
@@ -85,20 +82,13 @@ export default function Navbar() {
         setShowSearchResults(false)
       }
       
-      if (window.innerWidth < 992) {
-        const navbarCollapse = document.getElementById('navbarCollapse')
+      if (typeof window !== 'undefined' && window.innerWidth < 992 && isMobileMenuOpen) {
+        const isClickInsideMenu = target.closest('.navbar-collapse')
+        const isClickOnToggler = target.closest('.navbar-toggler')
+        const isClickOnCloseBtn = target.closest('.menu-close-btn')
         
-        // Kiểm tra nếu click vào overlay (::before pseudo-element không thể detect trực tiếp)
-        // Nên kiểm tra nếu click bên ngoài menu và không phải là toggler
-        if (navbarCollapse?.classList.contains('show')) {
-          const isClickInsideMenu = target.closest('.navbar-collapse')
-          const isClickOnToggler = target.closest('.navbar-toggler')
-          const isClickOnCloseBtn = target.closest('.menu-close-btn')
-          
-          if (!isClickInsideMenu && !isClickOnToggler && !isClickOnCloseBtn) {
-            // Click vào overlay hoặc bên ngoài
-            const bsCollapse = new (window as any).bootstrap.Collapse(navbarCollapse, { toggle: true })
-          }
+        if (!isClickInsideMenu && !isClickOnToggler && !isClickOnCloseBtn) {
+          closeMenu()
         }
       }
     }
@@ -109,10 +99,7 @@ export default function Navbar() {
       if (target.closest('.menu-close-btn') || target.closest('.fa-times')) {
         e.preventDefault()
         e.stopPropagation()
-        const navbarCollapse = document.getElementById('navbarCollapse')
-        if (navbarCollapse?.classList.contains('show')) {
-          const bsCollapse = new (window as any).bootstrap.Collapse(navbarCollapse, { toggle: true })
-        }
+        closeMenu()
       }
     }
 
@@ -123,37 +110,41 @@ export default function Navbar() {
       document.removeEventListener('click', handleClickOutside)
       document.removeEventListener('click', handleCloseClick)
     }
-  }, [showSearchResults])
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  }, [showSearchResults, isMobileMenuOpen])
 
   useEffect(() => {
-    const navbarCollapse = document.getElementById('navbarCollapse')
-    if (navbarCollapse) {
-      const handleShow = () => setIsMenuOpen(true)
-      const handleHide = () => setIsMenuOpen(false)
-      
-      navbarCollapse.addEventListener('show.bs.collapse', handleShow)
-      navbarCollapse.addEventListener('hide.bs.collapse', handleHide)
-      
-      return () => {
-        navbarCollapse.removeEventListener('show.bs.collapse', handleShow)
-        navbarCollapse.removeEventListener('hide.bs.collapse', handleHide)
-      }
+    if (typeof document === 'undefined') return
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
     }
-  }, [])
+  }, [isMobileMenuOpen])
 
   const closeMenu = () => {
-    const navbarCollapse = document.getElementById('navbarCollapse')
-    if (navbarCollapse?.classList.contains('show')) {
-      const bsCollapse = new (window as any).bootstrap.Collapse(navbarCollapse, { toggle: true })
+    setIsMobileMenuOpen(false)
+  }
+
+  const toggleMenu = () => {
+    setIsMobileMenuOpen((prev) => !prev)
+  }
+
+  const handleLanguageSelect = (lang: 'vi' | 'en') => {
+    setLanguage(lang)
+    if (typeof window !== 'undefined' && window.innerWidth < 992) {
+      closeMenu()
+    }
+  }
+
+  const handleNavItemClick = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 992) {
+      closeMenu()
     }
   }
 
   return (
     <>
       {/* Overlay */}
-      {isMenuOpen && (
+      {isMobileMenuOpen && (
         <div 
           className="menu-overlay d-lg-none" 
           onClick={closeMenu}
@@ -164,7 +155,7 @@ export default function Navbar() {
             width: '100vw',
             height: '100vh',
             background: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 9997,
+            zIndex: 1999,
             transition: 'opacity 0.3s ease-in-out'
           }}
         />
@@ -172,13 +163,20 @@ export default function Navbar() {
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-3 px-md-4 px-lg-5 py-3 py-lg-0">
         <Link href="/" className="navbar-brand p-0">
           <h1 className="text-primary m-0" style={{ fontSize: 'clamp(1.25rem, 4vw, 1.75rem)' }}>
-            <i className="fa fa-building me-2 me-md-3"></i>Nhôm Kính
+            <i className="fa fa-building me-2 me-md-3"></i>{navContent.brand}
           </h1>
         </Link>
-        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" style={{ zIndex: 9999, position: 'relative' }}>
+        <button 
+          className="navbar-toggler" 
+          type="button" 
+          aria-label="Toggle navigation"
+          aria-expanded={isMobileMenuOpen}
+          onClick={toggleMenu}
+          style={{ zIndex: 2100, position: 'relative' }}
+        >
           <span className="fa fa-bars"></span>
         </button>
-        <div className="collapse navbar-collapse" id="navbarCollapse">
+        <div className={`navbar-collapse ${isMobileMenuOpen ? 'show-mobile' : ''}`}>
           <button className="menu-close-btn d-lg-none" type="button" onClick={closeMenu} style={{ 
             position: 'absolute', 
             top: '20px', 
@@ -193,45 +191,68 @@ export default function Navbar() {
             <i className="fa fa-times"></i>
           </button>
         <div className="navbar-nav ms-auto py-0 pe-2 pe-md-4">
-          <Link href="/" className={`nav-item nav-link ${isActive('/')}`}>Trang Chủ</Link>
-          <Link href="/about" className={`nav-item nav-link ${isActive('/about')}`}>Giới Thiệu</Link>
-          <Link href="/service" className={`nav-item nav-link ${isActive('/service')}`}>Dịch Vụ</Link>
-          
-          {/* Products Dropdown */}
-          <div className="nav-item dropdown">
-            <a href="#" className="nav-link dropdown-toggle" data-bs-toggle="dropdown">Sản Phẩm</a>
-            <div className="dropdown-menu m-0" style={{ maxHeight: '400px', overflowY: 'auto', minWidth: '220px' }}>
-              {products.map((product) => (
-                <Link key={product.id} href={`/product/${product.id}`} className="dropdown-item">
+          <Link href="/" className={`nav-item nav-link ${isActive('/')}`} onClick={handleNavItemClick}>{navContent.links.home}</Link>
+          <Link href="/about" className={`nav-item nav-link ${isActive('/about')}`} onClick={handleNavItemClick}>{navContent.links.about}</Link>
+          <Link href="/news" className={`nav-item nav-link ${isActive('/news')}`} onClick={handleNavItemClick}>{navContent.links.news}</Link>
+          <div className="nav-item dropdown d-none d-lg-block">
+            <Link href="/products" className={`nav-link ${isActive('/products')}`} onClick={handleNavItemClick}>
+              {navContent.links.products}
+            </Link>
+            <div className="dropdown-menu nav-mega-menu">
+              {localizedProducts.slice(0, 6).map(product => (
+                <Link 
+                  key={product.id}
+                  href={`/product/${product.id}`}
+                  className="dropdown-item"
+                  onClick={handleNavItemClick}
+                >
                   {product.name}
                 </Link>
               ))}
             </div>
           </div>
+          <Link href="/products" className={`nav-item nav-link d-lg-none ${isActive('/products')}`} onClick={handleNavItemClick}>
+            {navContent.links.products}
+          </Link>
 
-          {/* Categories Dropdown */}
-          <div className="nav-item dropdown">
-            <a href="#" className="nav-link dropdown-toggle" data-bs-toggle="dropdown">Danh Mục</a>
-            <div className="dropdown-menu m-0" style={{ minWidth: '220px' }}>
-              {categories.map((category) => (
-                <Link key={category.id} href={`/category/${category.id}`} className="dropdown-item">
+          <div className="nav-item dropdown d-none d-lg-block">
+            <Link href="/categories" className={`nav-link ${isActive('/categories')}`} onClick={handleNavItemClick}>
+              {navContent.links.categories}
+            </Link>
+            <div className="dropdown-menu nav-mega-menu">
+              {localizedCategories.map(category => (
+                <Link 
+                  key={category.id}
+                  href={`/category/${category.id}`}
+                  className="dropdown-item"
+                  onClick={handleNavItemClick}
+                >
                   {category.name}
                 </Link>
               ))}
             </div>
           </div>
+          <Link href="/categories" className={`nav-item nav-link d-lg-none ${isActive('/categories')}`} onClick={handleNavItemClick}>
+            {navContent.links.categories}
+          </Link>
 
-          <Link href="/contact" className={`nav-item nav-link ${isActive('/contact')}`}>Liên Hệ</Link>
+          <Link href="/recruitment" className={`nav-item nav-link ${isActive('/recruitment')}`} onClick={handleNavItemClick}>
+            {navContent.links.recruitment}
+          </Link>
+          <Link href="/contact" className={`nav-item nav-link ${isActive('/contact')}`} onClick={handleNavItemClick}>{navContent.links.contact}</Link>
         </div>
 
         {/* Search Bar */}
-        <div className="navbar-search position-relative ms-lg-3 mt-3 mt-lg-0">
+        <div
+          className="navbar-search position-relative ms-lg-3 mt-3 mt-lg-0"
+          style={{ width: 'min(380px, 100%)' }}
+        >
           <form onSubmit={handleSearch} className="d-flex align-items-center">
-            <div className="position-relative">
+            <div className="position-relative w-100">
               <input
                 type="text"
                 className="form-control search-input"
-                placeholder="Tìm kiếm sản phẩm nhôm kính..."
+                placeholder={navContent.search.placeholder}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value)
@@ -243,13 +264,14 @@ export default function Navbar() {
                   }
                 }}
                 style={{
-                  width: '250px',
-                  paddingRight: '40px',
-                  borderRadius: '25px',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  width: '100%',
+                  paddingRight: '48px',
+                  borderRadius: '28px',
+                  border: '1px solid rgba(255, 255, 255, 0.35)',
+                  background: 'rgba(255, 255, 255, 0.12)',
                   color: 'white',
-                  paddingLeft: '15px'
+                  paddingLeft: '18px',
+                  transition: 'width 0.3s ease'
                 }}
               />
               <button
@@ -292,7 +314,7 @@ export default function Navbar() {
                 {searchResults.products.length > 0 && (
                   <div className="search-section">
                     <div className="px-3 py-2 fw-bold text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                      Sản Phẩm
+                      {navContent.search.productsTitle}
                     </div>
                     {searchResults.products.map((product) => (
                       <div
@@ -320,7 +342,7 @@ export default function Navbar() {
                 {searchResults.categories.length > 0 && (
                   <div className="search-section">
                     <div className="px-3 py-2 fw-bold text-muted" style={{ fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                      Danh Mục
+                      {navContent.search.categoriesTitle}
                     </div>
                     {searchResults.categories.map((category) => (
                       <div
@@ -350,31 +372,36 @@ export default function Navbar() {
           </form>
         </div>
 
-        {/* Language Switcher */}
-        <div className="nav-item dropdown ms-lg-3 mt-3 mt-lg-0">
-          <a href="#" className="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" style={{ padding: '0.5rem 1rem' }}>
-            {currentLang === 'vi' ? (
-              <span className="flag-icon" style={{ fontSize: '1.2rem' }}>🇻🇳</span>
-            ) : (
-              <span className="flag-icon" style={{ fontSize: '1.2rem' }}>🇬🇧</span>
-            )}
-          </a>
-          <div className="dropdown-menu dropdown-menu-end m-0" style={{ minWidth: '120px' }}>
-            <button
-              className={`dropdown-item d-flex align-items-center ${currentLang === 'vi' ? 'active' : ''}`}
-              onClick={() => changeLanguage('vi')}
-            >
-              <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>🇻🇳</span>
-              <span>Tiếng Việt</span>
-            </button>
-            <button
-              className={`dropdown-item d-flex align-items-center ${currentLang === 'en' ? 'active' : ''}`}
-              onClick={() => changeLanguage('en')}
-            >
-              <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>🇬🇧</span>
-              <span>English</span>
-            </button>
-          </div>
+        {/* Language Switcher - Two Flag Buttons */}
+        <div className="language-switcher d-flex align-items-center ms-lg-3 mt-3 mt-lg-0 gap-2">
+          <button
+            type="button"
+            className={`flag-button ${language === 'vi' ? 'active' : ''}`}
+            onClick={() => handleLanguageSelect('vi')}
+            aria-label="Tiếng Việt"
+            title="Tiếng Việt"
+          >
+            <img
+              src="https://flagcdn.com/w40/vn.png"
+              alt="Vietnam Flag"
+              width={32}
+              height={24}
+            />
+          </button>
+          <button
+            type="button"
+            className={`flag-button ${language === 'en' ? 'active' : ''}`}
+            onClick={() => handleLanguageSelect('en')}
+            aria-label="English"
+            title="English"
+          >
+            <img
+              src="https://flagcdn.com/w40/gb.png"
+              alt="United Kingdom Flag"
+              width={32}
+              height={24}
+            />
+          </button>
         </div>
       </div>
     </nav>

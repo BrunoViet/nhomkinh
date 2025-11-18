@@ -20,9 +20,145 @@
 .back-to-top {
     position: fixed;
     display: none;
-    right: 45px;
-    bottom: 45px;
+    right: 20px;
+    bottom: 90px;
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    width: 100%;
+    background: #0f172b;
+}
+
+.navbar .navbar-collapse {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 10000;
+}
+
+.menu-close-btn {
+    display: none;
+}
+
     z-index: 99;
+    border-radius: 50% !important;
+    transition: all 0.3s ease;
+}
+
+.back-to-top:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(254, 161, 22, 0.5) !important;
+}
+
+.call-phone-btn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 99;
+    border-radius: 50% !important;
+    transition: all 0.3s ease;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    animation: phonePulse 2.4s ease-in-out infinite;
+}
+
+.call-phone-btn:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5) !important;
+    animation-play-state: paused;
+}
+
+.call-phone-btn:active {
+    transform: translateY(-2px) scale(1.05);
+}
+
+.call-phone-btn i {
+    animation: phoneVibrate 2s ease-in-out infinite;
+    display: inline-block;
+}
+
+@media (max-width: 991.98px) {
+    .back-to-top {
+        right: 15px;
+        bottom: 85px;
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .call-phone-btn {
+        right: 15px;
+        bottom: 15px;
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .back-to-top i,
+    .call-phone-btn i {
+        font-size: 1rem !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .back-to-top {
+        right: 12px;
+        bottom: 80px;
+        width: 48px !important;
+        height: 48px !important;
+    }
+    
+    .call-phone-btn {
+        right: 12px;
+        bottom: 12px;
+        width: 48px !important;
+        height: 48px !important;
+    }
+}
+
+@keyframes phonePulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.45);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 12px rgba(40, 167, 69, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+@keyframes phoneVibrate {
+    0% {
+        transform: rotate(0deg);
+    }
+    10% {
+        transform: rotate(-8deg);
+    }
+    20% {
+        transform: rotate(8deg);
+    }
+    30% {
+        transform: rotate(-6deg);
+    }
+    40% {
+        transform: rotate(6deg);
+    }
+    50% {
+        transform: rotate(-4deg);
+    }
+    60% {
+        transform: rotate(4deg);
+    }
+    70%,
+    100% {
+        transform: rotate(0deg);
+    }
 }
 
 
@@ -214,6 +350,13 @@
     background-position: center center;
     background-repeat: no-repeat;
     background-size: cover;
+    margin-top: 80px; /* Khoảng cách với navbar fixed */
+}
+
+@media (max-width: 991.98px) {
+    .hero-header {
+        margin-top: 70px; /* Khoảng cách nhỏ hơn trên mobile */
+    }
 }
 
 .hero-header img {
@@ -811,8 +954,59 @@
     z-index: 0;
 }
 
+/* Đảm bảo phần sản phẩm scroll bình thường */
+.section-fade-in {
+    position: relative;
+    z-index: 1;
+    background: #FFFFFF;
+    padding-top: 2rem;
+    margin-top: 0;
+}
+
 .product-item {
     padding: 0 12px;
+}
+
+/*** News Section ***/
+.news-main-item:hover .news-main-image {
+    transform: scale(1.05);
+}
+
+.news-side-item:hover {
+    transform: translateX(5px);
+    transition: transform 0.3s ease;
+}
+
+.news-side-item:hover .news-side-content h6 {
+    color: var(--primary) !important;
+    transition: color 0.3s ease;
+}
+
+.news-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .15) !important;
+}
+
+.news-card:hover .news-card-image-wrapper img {
+    transform: scale(1.1);
+}
+
+.news-card-content h6 {
+    transition: color 0.3s ease;
+}
+
+.news-card:hover .news-card-content h6 {
+    color: var(--primary);
+}
+
+@media (max-width: 991.98px) {
+    .news-main-image {
+        height: 300px !important;
+    }
+    
+    .news-side-item {
+        margin-bottom: 1.5rem !important;
+    }
 }
 
 .product-card-link {
@@ -1207,21 +1401,14 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
     transition: color 0.3s ease;
 }
 
+/* Đã bỏ thanh màu vàng dưới menu */
 .navbar-nav .nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 0;
-    height: 2px;
-    background: var(--primary);
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
+    display: none;
 }
 
 .navbar-nav .nav-link:hover::after,
 .navbar-nav .nav-link.active::after {
-    width: 80%;
+    display: none;
 }
 
 /* Dropdown menu animation */
@@ -1239,6 +1426,22 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
 
 .dropdown.show .dropdown-menu,
 .dropdown:hover .dropdown-menu {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.nav-item.dropdown .nav-mega-menu {
+    min-width: 240px;
+    padding: 10px 0;
+}
+
+.nav-item.dropdown .nav-mega-menu .dropdown-item {
+    white-space: normal;
+    line-height: 1.4;
+}
+
+.nav-item.dropdown:hover > .nav-mega-menu {
     opacity: 1;
     transform: translateY(0) scale(1);
     pointer-events: auto;
@@ -1338,6 +1541,13 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
     border-radius: 8px;
     padding: 8px 0;
     background: white;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(-10px) scale(0.95) !important;
+}
+
+.navbar-nav .dropdown.show .dropdown-menu,
+.navbar-nav .dropdown:hover .dropdown-menu {
+    transform: translateX(-50%) translateY(0) scale(1) !important;
 }
 
 .navbar-nav .dropdown-item {
@@ -1386,19 +1596,97 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
 }
 
 @media (max-width: 991.98px) {
+    .navbar .navbar-collapse {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: min(340px, 85%);
+        background: #0f172b;
+        padding: 90px 1.5rem 2.5rem;
+        transform: translateX(100%);
+        transition: transform 0.35s ease;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+        box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
+        z-index: 11000;
+    }
+
+    .navbar .navbar-collapse.show-mobile {
+        transform: translateX(0);
+    }
+
+    .menu-close-btn {
+        display: block;
+    }
+
+    .navbar-nav {
+        width: 100%;
+        margin-top: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        width: 100%;
+    }
+
+    .navbar-nav .nav-link:last-child {
+        border-bottom: none;
+    }
+
+    .navbar-nav .dropdown-menu {
+        position: static !important;
+        transform: none !important;
+        box-shadow: none;
+        margin-top: 0.35rem !important;
+        padding-left: 0.5rem;
+        background: transparent;
+    }
+
+    .navbar-nav .dropdown-item {
+        color: rgba(255, 255, 255, 0.85);
+        padding: 0.3rem 0;
+    }
+
     .navbar-search {
         width: 100%;
-        margin: 10px 0;
+        margin: 5px 0 10px;
     }
     
     .navbar-search .search-input {
         width: 100% !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        color: #fff;
+    }
+    
+    .navbar-search .position-relative,
+    .navbar-search form,
+    .navbar-search .input-group {
+        width: 100%;
     }
     
     .search-results-dropdown {
         left: 0 !important;
-        right: 0;
+        right: 0 !important;
         min-width: auto !important;
+        width: 100% !important;
+    }
+    
+    .language-switcher {
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 0.5rem;
+        gap: 0.75rem;
+    }
+
+    .navbar-brand {
+        flex: 1;
     }
 }
 
@@ -1419,9 +1707,9 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
     transform: scale(1.05);
 }
 
-/* Smooth scroll */
+/* Normal scroll - no smooth behavior */
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
 }
 
 /* Loading animation for images */
@@ -1518,6 +1806,120 @@ img[src=""], img:not([src]) {
 /* Smooth page transitions */
 .page-transition {
     animation: fadeIn 0.5s ease-out;
+}
+
+/* Product Search Bar Styles */
+.product-search-wrapper {
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1050;
+}
+
+.product-search-box {
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.product-search-box:hover {
+    box-shadow: 0 8px 40px rgba(254, 161, 22, 0.2);
+    transform: translateY(-2px);
+}
+
+.product-search-box .form-control:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: var(--primary);
+}
+
+.product-search-box .input-group-text {
+    transition: all 0.3s ease;
+}
+
+.product-search-box:hover .input-group-text.bg-primary {
+    background-color: #d68910 !important;
+}
+
+.product-search-box .btn-link:hover {
+    color: var(--primary) !important;
+}
+
+.search-results-count {
+    animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Product Search Suggestions Styles */
+.product-search-suggestions {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) #f0f0f0;
+}
+
+.product-search-suggestions::-webkit-scrollbar {
+    width: 6px;
+}
+
+.product-search-suggestions::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 10px;
+}
+
+.product-search-suggestions::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none !important;
+}
+
+.suggestion-item:hover {
+    color: var(--primary);
+}
+
+.suggestion-item:hover .fw-semibold {
+    color: var(--primary) !important;
+}
+
+.suggestion-section:not(:last-child) {
+    border-bottom: 2px solid #e0e0e0;
+}
+
+@media (max-width: 991.98px) {
+    .product-search-box {
+        border-radius: 25px;
+    }
+    
+    .product-search-box .input-group-text {
+        padding: 10px 15px !important;
+    }
+    
+    .product-search-box .form-control {
+        padding: 12px 15px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .product-search-suggestions {
+        max-height: 300px !important;
+    }
+    
+    .suggestion-item {
+        padding: 12px 16px !important;
+    }
+    
+    .suggestion-item .text-muted {
+        font-size: 0.8rem !important;
+    }
 }
 
 /* Icon hover effects */
@@ -1619,6 +2021,49 @@ img[src=""], img:not([src]) {
     
     .section-fade-in {
         position: relative !important;
-        z-index: 0 !important;
+        z-index: 1 !important;
+        background: #FFFFFF !important;
+        padding-top: 1.5rem !important;
+    }
+}
+
+/* Language Flag Buttons */
+.flag-button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.flag-button img {
+    width: 36px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 4px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: none;
+}
+
+.flag-button:hover img {
+    transform: scale(1.1);
+}
+
+.flag-button.active img {
+    box-shadow: 0 0 0 2px var(--primary);
+    transform: scale(1.05);
+}
+
+.flag-button:active img {
+    transform: scale(0.95);
+}
+
+@media (max-width: 991.98px) {
+    .flag-button img {
+        width: 30px;
+        height: 20px;
     }
 }

@@ -141,7 +141,7 @@
         }
     });
     $('.back-to-top').click(function () {
-        $('html, body').animate({scrollTop: 0}, 1500, 'easeInOutExpo');
+        window.scrollTo({ top: 0, behavior: 'auto' });
         return false;
     });
 
@@ -159,16 +159,16 @@
         });
     });
 
-    // Parallax effect for hero sections
-    $(window).on('scroll', function() {
-        const scrolled = $(window).scrollTop();
-        const parallax = $('.hero-header');
-        const speed = scrolled * 0.3;
-        
-        if (parallax.length) {
-            parallax.css('transform', 'translateY(' + speed + 'px)');
-        }
-    });
+    // Parallax effect disabled - normal scroll behavior
+    // $(window).on('scroll', function() {
+    //     const scrolled = $(window).scrollTop();
+    //     const parallax = $('.hero-header');
+    //     const speed = scrolled * 0.3;
+    //     
+    //     if (parallax.length) {
+    //         parallax.css('transform', 'translateY(' + speed + 'px)');
+    //     }
+    // });
 
     // Smooth reveal animation for product cards
     function animateProductCards() {

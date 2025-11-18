@@ -2,8 +2,11 @@ import Head from 'next/head'
 import Link from 'next/link'
 import Layout from '@/components/Layout'
 import { useEffect } from 'react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function About() {
+  const { dictionary } = useLanguage()
+  const copy = dictionary.pages.about
   useEffect(() => {
     // Initialize counter-up after component mounts and scripts are loaded
     if (typeof window !== 'undefined' && window.jQuery) {
@@ -27,19 +30,18 @@ export default function About() {
   return (
     <>
       <Head>
-        <title>About Us - Restoran</title>
-        <meta name="description" content="About Restoran Restaurant" />
+        <title>{copy.metaTitle}</title>
+        <meta name="description" content={copy.metaDescription} />
       </Head>
       <Layout>
         <div className="container-xxl position-relative p-0">
           <div className="container-xxl py-5 bg-dark hero-header mb-5">
             <div className="container text-center my-5 pt-5 pb-4">
-              <h1 className="display-3 text-white mb-3 animated slideInDown">About Us</h1>
+              <h1 className="display-3 text-white mb-3 animated slideInDown">{copy.heroTitle}</h1>
               <nav aria-label="breadcrumb">
                 <ol className="breadcrumb justify-content-center text-uppercase">
-                  <li className="breadcrumb-item"><Link href="/">Home</Link></li>
-                  <li className="breadcrumb-item"><a href="#">Pages</a></li>
-                  <li className="breadcrumb-item text-white active" aria-current="page">About</li>
+                  <li className="breadcrumb-item"><Link href="/">{copy.breadcrumbParent}</Link></li>
+                  <li className="breadcrumb-item text-white active" aria-current="page">{copy.breadcrumbCurrent}</li>
                 </ol>
               </nav>
             </div>
@@ -67,31 +69,32 @@ export default function About() {
                 </div>
               </div>
               <div className="col-lg-6">
-                <h5 className="section-title ff-secondary text-start text-primary fw-normal">About Us</h5>
-                <h1 className="mb-4">Welcome to <i className="fa fa-utensils text-primary me-2"></i>Restoran</h1>
-                <p className="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos erat ipsum et lorem et sit, sed stet lorem sit.</p>
-                <p className="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet</p>
+                <h5 className="section-title ff-secondary text-start text-primary fw-normal">{copy.sectionTitle}</h5>
+                <h1 className="mb-4">{copy.welcomeTitle}</h1>
+                {copy.paragraphs.map((paragraph, idx) => (
+                  <p key={idx} className="mb-4">{paragraph}</p>
+                ))}
                 <div className="row g-4 mb-4">
                   <div className="col-sm-6">
                     <div className="d-flex align-items-center border-start border-5 border-primary px-3">
-                      <h1 className="flex-shrink-0 display-5 text-primary mb-0" data-toggle="counter-up">15</h1>
+                      <h1 className="flex-shrink-0 display-5 text-primary mb-0" data-toggle="counter-up">{copy.stats.years.value}</h1>
                       <div className="ps-4">
-                        <p className="mb-0">Years of</p>
-                        <h6 className="text-uppercase mb-0">Experience</h6>
+                        <p className="mb-0">{copy.stats.years.labelTop}</p>
+                        <h6 className="text-uppercase mb-0">{copy.stats.years.labelBottom}</h6>
                       </div>
                     </div>
                   </div>
                   <div className="col-sm-6">
                     <div className="d-flex align-items-center border-start border-5 border-primary px-3">
-                      <h1 className="flex-shrink-0 display-5 text-primary mb-0" data-toggle="counter-up">50</h1>
+                      <h1 className="flex-shrink-0 display-5 text-primary mb-0" data-toggle="counter-up">{copy.stats.projects.value}</h1>
                       <div className="ps-4">
-                        <p className="mb-0">Popular</p>
-                        <h6 className="text-uppercase mb-0">Master Chefs</h6>
+                        <p className="mb-0">{copy.stats.projects.labelTop}</p>
+                        <h6 className="text-uppercase mb-0">{copy.stats.projects.labelBottom}</h6>
                       </div>
                     </div>
                   </div>
                 </div>
-                <Link href="/" className="btn btn-primary py-3 px-5 mt-2">Read More</Link>
+                <Link href="/contact" className="btn btn-primary py-3 px-5 mt-2">{copy.cta}</Link>
               </div>
             </div>
           </div>
@@ -102,8 +105,8 @@ export default function About() {
         <div className="container-xxl pt-5 pb-3">
           <div className="container">
             <div className="text-center wow fadeInUp" data-wow-delay="0.1s">
-              <h5 className="section-title ff-secondary text-center text-primary fw-normal">Team Members</h5>
-              <h1 className="mb-5">Our Master Chefs</h1>
+              <h5 className="section-title ff-secondary text-center text-primary fw-normal">{copy.team.title}</h5>
+              <h1 className="mb-5">{copy.team.subtitle}</h1>
             </div>
             <div className="row g-4">
               {[1, 2, 3, 4].map((i) => (

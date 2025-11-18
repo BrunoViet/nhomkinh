@@ -1,23 +1,26 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import Layout from '@/components/Layout'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function Contact() {
+  const { dictionary } = useLanguage()
+  const copy = dictionary.pages.contact
   return (
     <>
       <Head>
-        <title>Contact - Restoran</title>
-        <meta name="description" content="Contact Restoran" />
+        <title>{copy.metaTitle}</title>
+        <meta name="description" content={copy.metaDescription} />
       </Head>
       <Layout>
         <div className="container-xxl position-relative p-0">
           <div className="container-xxl py-5 bg-dark hero-header mb-5">
             <div className="container text-center my-5 pt-5 pb-4">
-              <h1 className="display-3 text-white mb-3 animated slideInDown">Contact Us</h1>
+              <h1 className="display-3 text-white mb-3 animated slideInDown">{copy.heroTitle}</h1>
               <nav aria-label="breadcrumb">
                 <ol className="breadcrumb justify-content-center text-uppercase">
-                  <li className="breadcrumb-item"><Link href="/">Home</Link></li>
-                  <li className="breadcrumb-item text-white active" aria-current="page">Contact</li>
+                  <li className="breadcrumb-item"><Link href="/">{copy.breadcrumbParent}</Link></li>
+                  <li className="breadcrumb-item text-white active" aria-current="page">{copy.breadcrumbCurrent}</li>
                 </ol>
               </nav>
             </div>
@@ -27,24 +30,18 @@ export default function Contact() {
         <div className="container-xxl py-5">
           <div className="container">
             <div className="text-center wow fadeInUp" data-wow-delay="0.1s">
-              <h5 className="section-title ff-secondary text-center text-primary fw-normal">Contact Us</h5>
-              <h1 className="mb-5">Contact For Any Query</h1>
+              <h5 className="section-title ff-secondary text-center text-primary fw-normal">{copy.sectionTitle}</h5>
+              <h1 className="mb-5">{copy.sectionSubtitle}</h1>
             </div>
             <div className="row g-4">
               <div className="col-12">
                 <div className="row gy-4">
-                  <div className="col-md-4">
-                    <h5 className="section-title ff-secondary fw-normal text-start text-primary">Booking</h5>
-                    <p><i className="fa fa-envelope-open text-primary me-2"></i>book@example.com</p>
-                  </div>
-                  <div className="col-md-4">
-                    <h5 className="section-title ff-secondary fw-normal text-start text-primary">General</h5>
-                    <p><i className="fa fa-envelope-open text-primary me-2"></i>info@example.com</p>
-                  </div>
-                  <div className="col-md-4">
-                    <h5 className="section-title ff-secondary fw-normal text-start text-primary">Technical</h5>
-                    <p><i className="fa fa-envelope-open text-primary me-2"></i>tech@example.com</p>
-                  </div>
+                  {copy.offices.map((office) => (
+                    <div key={office.title} className="col-md-4">
+                      <h5 className="section-title ff-secondary fw-normal text-start text-primary">{office.title}</h5>
+                      <p><i className="fa fa-envelope-open text-primary me-2"></i>{office.value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="col-md-6 wow fadeIn" data-wow-delay="0.1s">
@@ -64,30 +61,30 @@ export default function Contact() {
                     <div className="row g-3">
                       <div className="col-md-6">
                         <div className="form-floating">
-                          <input type="text" className="form-control" id="name" placeholder="Your Name" />
-                          <label htmlFor="name">Your Name</label>
+                          <input type="text" className="form-control" id="name" placeholder={copy.form.name} />
+                          <label htmlFor="name">{copy.form.name}</label>
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="form-floating">
-                          <input type="email" className="form-control" id="email" placeholder="Your Email" />
-                          <label htmlFor="email">Your Email</label>
+                          <input type="email" className="form-control" id="email" placeholder={copy.form.email} />
+                          <label htmlFor="email">{copy.form.email}</label>
                         </div>
                       </div>
                       <div className="col-12">
                         <div className="form-floating">
-                          <input type="text" className="form-control" id="subject" placeholder="Subject" />
-                          <label htmlFor="subject">Subject</label>
+                          <input type="text" className="form-control" id="subject" placeholder={copy.form.subject} />
+                          <label htmlFor="subject">{copy.form.subject}</label>
                         </div>
                       </div>
                       <div className="col-12">
                         <div className="form-floating">
-                          <textarea className="form-control" placeholder="Leave a message here" id="message" style={{ height: '150px' }}></textarea>
-                          <label htmlFor="message">Message</label>
+                          <textarea className="form-control" placeholder={copy.form.message} id="message" style={{ height: '150px' }}></textarea>
+                          <label htmlFor="message">{copy.form.message}</label>
                         </div>
                       </div>
                       <div className="col-12">
-                        <button className="btn btn-primary w-100 py-3" type="submit">Send Message</button>
+                        <button className="btn btn-primary w-100 py-3" type="submit">{copy.form.submit}</button>
                       </div>
                     </div>
                   </form>

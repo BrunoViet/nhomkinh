@@ -1,20 +1,86 @@
 import Head from 'next/head'
-import Image from 'next/image'
 import Link from 'next/link'
 import Layout from '@/components/Layout'
 import ProductCarousel from '@/components/ProductCarousel'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/router'
+import { featuredProject, sideProjects, gridProjects } from '@/constants/projects'
+import { products as productSource, productCategories } from '@/constants/products'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function Home() {
+  const router = useRouter()
+  const { dictionary, language } = useLanguage()
+  const home = dictionary.home
+  const {
+    hero,
+    productSearch,
+    products: productContent,
+    categoryProducts,
+    news,
+    services,
+    about,
+    projectsSection,
+    reservation,
+    meta
+  } = home
+
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [productSearchQuery, setProductSearchQuery] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
   
-  // Danh sách ảnh banner - ảnh nhôm kính
-  const bannerImages = [
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1920&q=80', // Cửa nhôm kính
-    'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=1920&q=80', // Vách kính
-    'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1920&q=80', // Cửa kính hiện đại
-    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1920&q=80'  // Nhôm kính
-  ]
+  const bannerImages = home.bannerImages
+  const localizedProducts = useMemo(() => productSource.map(product => ({
+    id: product.id,
+    name: product.name[language],
+    description: product.description[language],
+    image: product.image,
+    details: product.details[language],
+    categoryId: product.categoryId
+  })), [language])
+  const localizedCategories = useMemo(() => productCategories.map(category => ({
+    id: category.id,
+    name: category.name[language],
+    description: category.description[language]
+  })), [language])
+
+  // Danh sách danh mục
+  // Tìm kiếm suggestions (sản phẩm và danh mục)
+  const searchSuggestions = useMemo(() => {
+    if (!productSearchQuery.trim()) return { products: [], categories: [] }
+    
+    const query = productSearchQuery.toLowerCase()
+    const matchedProducts = localizedProducts.filter(product => 
+      product.name.toLowerCase().includes(query) ||
+      product.description.toLowerCase().includes(query)
+    ).slice(0, 5)
+    
+    const matchedCategories = localizedCategories.filter(category => 
+      category.name.toLowerCase().includes(query) ||
+      category.description.toLowerCase().includes(query)
+    )
+    
+    return { products: matchedProducts, categories: matchedCategories }
+  }, [productSearchQuery, localizedProducts, localizedCategories])
+
+  // Sản phẩm hiển thị trong carousel (luôn hiển thị 6 sản phẩm đầu tiên)
+  const displayProducts = localizedProducts.slice(0, 6)
+  const categoryShowcaseProducts = useMemo(() => {
+    return productCategories.flatMap(category => 
+      localizedProducts.filter(product => product.categoryId === category.id).slice(0, 2)
+    )
+  }, [localizedProducts])
+
+  // Xử lý click vào suggestion
+  const handleSuggestionClick = (type: 'product' | 'category', id: number) => {
+    if (type === 'product') {
+      router.push(`/product/${id}`)
+    } else {
+      router.push(`/category/${id}`)
+    }
+    setProductSearchQuery('')
+    setShowSuggestions(false)
+  }
 
   useEffect(() => {
     // Auto slide banner
@@ -48,11 +114,11 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Nhôm Kính - Chuyên Thiết Kế & Thi Công Nhôm Kính</title>
-        <meta name="description" content="Chuyên thiết kế, sản xuất và thi công nhôm kính chất lượng cao. Cửa nhôm kính, vách kính, mái kính và các sản phẩm nhôm kính khác." />
+        <title>{meta.title}</title>
+        <meta name="description" content={meta.description} />
       </Head>
             <Layout>
-              <div className="container-xxl position-relative p-0" style={{ paddingTop: '80px' }}>
+        <div className="container-xxl position-relative p-0">
                 <div 
                   className="container-xxl py-5 bg-dark hero-header hero-slider"
                   style={{
@@ -90,9 +156,17 @@ export default function Home() {
                   <div className="container my-5 py-5" style={{ position: 'relative', zIndex: 2 }}>
                     <div className="row align-items-center g-5">
                       <div className="col-lg-6 text-center text-lg-start mb-4 mb-lg-0">
-                        <h1 className="display-3 text-white animated slideInLeft mb-3 mb-md-4">Nhôm Kính<br className="d-none d-md-block" />Chất Lượng Cao</h1>
-                        <p className="text-white animated slideInLeft mb-3 mb-md-4 pb-2 px-3 px-md-0">Chuyên thiết kế, sản xuất và thi công các sản phẩm nhôm kính cao cấp. Với nhiều năm kinh nghiệm, chúng tôi cam kết mang đến những sản phẩm chất lượng, đẹp mắt và bền bỉ theo thời gian.</p>
-                        <Link href="/contact" className="btn btn-primary py-2 py-sm-3 px-4 px-sm-5 me-2 me-md-3 animated slideInLeft">Liên Hệ Ngay</Link>
+                        <h1 className="display-3 text-white animated slideInLeft mb-3 mb-md-4">
+                          {hero.titleLine1}
+                          <br className="d-none d-md-block" />
+                          {hero.titleLine2}
+                        </h1>
+                        <p className="text-white animated slideInLeft mb-3 mb-md-4 pb-2 px-3 px-md-0">
+                          {hero.description}
+                        </p>
+                        <Link href="/contact" className="btn btn-primary py-2 py-sm-3 px-4 px-sm-5 me-2 me-md-3 animated slideInLeft">
+                          {hero.cta}
+                        </Link>
                       </div>
                       <div className="col-lg-6 text-center text-lg-end overflow-hidden">
                         <div 
@@ -166,142 +240,338 @@ export default function Home() {
                 </div>
               </div>
 
+        {/* Product Search Section Start */}
+        <div className="container-xxl py-4" style={{ marginTop: '3rem' }}>
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-8 col-xl-7">
+                <div className="product-search-wrapper wow fadeInUp" data-wow-delay="0.1s" style={{ position: 'relative', zIndex: 1050 }}>
+                  <div className="product-search-box position-relative">
+                    <div className="input-group">
+                      <span className="input-group-text bg-white border-end-0" style={{ 
+                        borderTopLeftRadius: '50px', 
+                        borderBottomLeftRadius: '50px',
+                        border: '2px solid var(--primary)',
+                        paddingLeft: '20px',
+                        paddingRight: '15px'
+                      }}>
+                        <i className="fa fa-search text-primary" style={{ fontSize: '1.2rem' }}></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control border-start-0 border-end-0"
+                        placeholder={productSearch.placeholder}
+                        value={productSearchQuery}
+                        onChange={(e) => {
+                          setProductSearchQuery(e.target.value)
+                          setShowSuggestions(true)
+                        }}
+                        onFocus={() => {
+                          if (productSearchQuery.trim()) {
+                            setShowSuggestions(true)
+                          }
+                        }}
+                        onBlur={() => {
+                          // Delay để cho phép click vào suggestion
+                          setTimeout(() => setShowSuggestions(false), 200)
+                        }}
+                        style={{
+                          border: '2px solid var(--primary)',
+                          borderLeft: 'none',
+                          borderRight: 'none',
+                          padding: '15px 20px',
+                          fontSize: '1rem',
+                          height: 'auto'
+                        }}
+                      />
+                      {productSearchQuery && (
+                        <button
+                          type="button"
+                          className="btn btn-link text-muted border-start-0"
+                          onClick={() => {
+                            setProductSearchQuery('')
+                            setShowSuggestions(false)
+                          }}
+                          style={{
+                            border: '2px solid var(--primary)',
+                            borderLeft: 'none',
+                            padding: '0 15px',
+                            textDecoration: 'none'
+                          }}
+                        >
+                          <i className="fa fa-times"></i>
+                        </button>
+                      )}
+                      <span className="input-group-text bg-primary text-white border-start-0" style={{ 
+                        borderTopRightRadius: '50px', 
+                        borderBottomRightRadius: '50px',
+                        border: '2px solid var(--primary)',
+                        paddingLeft: '20px',
+                        paddingRight: '20px',
+                        cursor: 'pointer'
+                      }}>
+                        <i className="fa fa-search"></i>
+                      </span>
+                    </div>
+                    
+                    {/* Dropdown Suggestions */}
+                    {showSuggestions && productSearchQuery.trim() && 
+                     (searchSuggestions.products.length > 0 || searchSuggestions.categories.length > 0) && (
+                      <div 
+                        className="product-search-suggestions"
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          marginTop: '10px',
+                          background: 'white',
+                          borderRadius: '15px',
+                          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
+                          zIndex: 1051,
+                          maxHeight: '400px',
+                          overflowY: 'auto',
+                          animation: 'fadeInDown 0.3s ease-out'
+                        }}
+                        onMouseDown={(e) => e.preventDefault()} // Prevent blur khi click
+                      >
+                        {searchSuggestions.categories.length > 0 && (
+                          <div className="suggestion-section">
+                            <div className="px-4 py-2 fw-bold text-muted border-bottom" style={{ 
+                              fontSize: '0.85rem', 
+                              textTransform: 'uppercase',
+                              background: '#f8f9fa'
+                            }}>
+                              <i className="fa fa-tags me-2"></i>{productSearch.categoriesTitle}
+                            </div>
+                            {searchSuggestions.categories.map((category) => (
+                              <div
+                                key={`category-${category.id}`}
+                                className="suggestion-item px-4 py-3 d-flex align-items-center"
+                                onClick={() => handleSuggestionClick('category', category.id)}
+                                style={{
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  borderBottom: '1px solid #f0f0f0'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#f8f9fa'
+                                  e.currentTarget.style.paddingLeft = '30px'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'white'
+                                  e.currentTarget.style.paddingLeft = '16px'
+                                }}
+                              >
+                                <i className="fa fa-folder text-primary me-3" style={{ fontSize: '1.1rem' }}></i>
+                                <div className="flex-grow-1">
+                                  <div className="fw-semibold text-dark">{category.name}</div>
+                                  <div className="text-muted small">{category.description}</div>
+                                </div>
+                                <i className="fa fa-chevron-right text-muted"></i>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {searchSuggestions.products.length > 0 && (
+                          <div className="suggestion-section">
+                            <div className="px-4 py-2 fw-bold text-muted border-bottom" style={{ 
+                              fontSize: '0.85rem', 
+                              textTransform: 'uppercase',
+                              background: '#f8f9fa'
+                            }}>
+                              <i className="fa fa-box me-2"></i>{productSearch.productsTitle}
+                            </div>
+                            {searchSuggestions.products.map((product) => (
+                              <div
+                                key={`product-${product.id}`}
+                                className="suggestion-item px-4 py-3 d-flex align-items-center"
+                                onClick={() => handleSuggestionClick('product', product.id)}
+                                style={{
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  borderBottom: '1px solid #f0f0f0'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = '#f8f9fa'
+                                  e.currentTarget.style.paddingLeft = '30px'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'white'
+                                  e.currentTarget.style.paddingLeft = '16px'
+                                }}
+                              >
+                                <div className="flex-shrink-0 me-3" style={{ width: '50px', height: '50px' }}>
+                                  <img 
+                                    src={product.image} 
+                                    alt={product.name}
+                                    className="img-fluid rounded"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  />
+                                </div>
+                                <div className="flex-grow-1">
+                                  <div className="fw-semibold text-dark">{product.name}</div>
+                                  <div className="text-muted small" style={{ 
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    maxWidth: '300px'
+                                  }}>
+                                    {product.description}
+                                  </div>
+                                </div>
+                                <i className="fa fa-chevron-right text-muted"></i>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Product Search Section End */}
+
         {/* Product Carousel Start */}
-        <div style={{ marginTop: '3rem', position: 'relative', zIndex: 0 }}>
+        <div style={{ marginTop: '2rem' }}>
         <ProductCarousel 
-          title="Sản Phẩm"
-          products={[
-            {
-              id: 1,
-              name: "Sản Phẩm 1",
-              description: "Mô tả ngắn về sản phẩm 1. Đây là một sản phẩm chất lượng cao với nhiều tính năng nổi bật.",
-              image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"
-            },
-            {
-              id: 2,
-              name: "Sản Phẩm 2",
-              description: "Mô tả ngắn về sản phẩm 2. Sản phẩm được thiết kế hiện đại và tiện lợi cho người sử dụng.",
-              image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80"
-            },
-            {
-              id: 3,
-              name: "Sản Phẩm 3",
-              description: "Mô tả ngắn về sản phẩm 3. Chất lượng đảm bảo và giá cả hợp lý cho mọi khách hàng.",
-              image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80"
-            },
-            {
-              id: 4,
-              name: "Sản Phẩm 4",
-              description: "Mô tả ngắn về sản phẩm 4. Được nhiều khách hàng tin tưởng và đánh giá cao.",
-              image: "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&q=80"
-            },
-            {
-              id: 5,
-              name: "Sản Phẩm 5",
-              description: "Mô tả ngắn về sản phẩm 5. Thiết kế độc đáo và phù hợp với xu hướng hiện đại.",
-              image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"
-            },
-            {
-              id: 6,
-              name: "Sản Phẩm 6",
-              description: "Mô tả ngắn về sản phẩm 6. Sản phẩm bán chạy nhất với nhiều ưu đãi hấp dẫn.",
-              image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80"
-            }
-          ]}
+            title={productContent.sectionTitle}
+            subtitle={productContent.heading}
+            products={displayProducts}
         />
         </div>
         {/* Product Carousel End */}
 
         {/* Product by Category Carousel Start */}
-        <div style={{ marginTop: '2rem', position: 'relative', zIndex: 0 }}>
+        <div style={{ marginTop: '2rem' }}>
         <ProductCarousel 
-          title="Sản Phẩm Theo Danh Mục"
-          products={[
-            {
-              id: 7,
-              name: "Danh Mục 1 - Sản Phẩm A",
-              description: "Mô tả về sản phẩm thuộc danh mục 1. Chất lượng cao và đáng tin cậy.",
-              image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"
-            },
-            {
-              id: 8,
-              name: "Danh Mục 1 - Sản Phẩm B",
-              description: "Mô tả về sản phẩm thuộc danh mục 1. Thiết kế hiện đại và tiện lợi.",
-              image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80"
-            },
-            {
-              id: 9,
-              name: "Danh Mục 2 - Sản Phẩm C",
-              description: "Mô tả về sản phẩm thuộc danh mục 2. Được nhiều khách hàng yêu thích.",
-              image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"
-            },
-            {
-              id: 10,
-              name: "Danh Mục 2 - Sản Phẩm D",
-              description: "Mô tả về sản phẩm thuộc danh mục 2. Giá cả hợp lý và chất lượng tốt.",
-              image: "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&q=80"
-            },
-            {
-              id: 11,
-              name: "Danh Mục 3 - Sản Phẩm E",
-              description: "Mô tả về sản phẩm thuộc danh mục 3. Phù hợp với mọi nhu cầu sử dụng.",
-              image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80"
-            },
-            {
-              id: 12,
-              name: "Danh Mục 3 - Sản Phẩm F",
-              description: "Mô tả về sản phẩm thuộc danh mục 3. Sản phẩm bán chạy nhất tuần này.",
-              image: "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&q=80"
-            }
-          ]}
+            title={categoryProducts.sectionTitle}
+            subtitle={categoryProducts.heading}
+            products={categoryShowcaseProducts}
         />
         </div>
         {/* Product by Category Carousel End */}
+
+        {/* News Section Start */}
+        <div className="container-xxl py-5">
+          <div className="container">
+            <div className="text-center wow fadeInUp" data-wow-delay="0.1s">
+              <h5 className="section-title ff-secondary text-center text-primary fw-normal">{news.sectionTitle}</h5>
+              <h1 className="mb-5">{news.heading}</h1>
+            </div>
+            <div className="row g-4">
+              <div className="col-lg-8">
+                <div className="news-main-item wow fadeInUp" data-wow-delay="0.1s">
+                  <Link href={`/news/${news.main.id}`} className="text-decoration-none">
+                    <div className="news-main-image-wrapper position-relative overflow-hidden rounded mb-3">
+                      <img 
+                        src={news.main.image} 
+                        alt={news.main.title} 
+                        className="img-fluid w-100 news-main-image"
+                        style={{ height: '450px', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                      />
+                      <div className="news-overlay position-absolute bottom-0 start-0 w-100 p-4" style={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)'
+                      }}>
+                        <span className="text-white-50 small"><i className="fa fa-calendar me-2"></i>{news.main.date}</span>
+                        <h3 className="text-white mt-2 mb-2" style={{ fontSize: '1.75rem', fontWeight: '600' }}>
+                          {news.main.title}
+                        </h3>
+                        <p className="text-white mb-0" style={{ fontSize: '1rem', lineHeight: '1.6' }}>
+                          {news.main.excerpt}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+
+              <div className="col-lg-4">
+                <div className="news-sidebar">
+                  {news.sidebar.map((item, index) => (
+                    <div key={item.id} className={`news-side-item ${index < news.sidebar.length - 1 ? 'mb-4' : ''} wow fadeInUp`} data-wow-delay={`${0.2 + index * 0.1}s`}>
+                      <Link href={`/news/${item.id}`} className="text-decoration-none d-flex">
+                        <div className="news-side-image-wrapper flex-shrink-0 me-3" style={{ width: '120px', height: '100px' }}>
+                          <img 
+                            src={item.image} 
+                            alt={item.title} 
+                            className="img-fluid w-100 h-100 rounded"
+                            style={{ objectFit: 'cover' }}
+                          />
+                        </div>
+                        <div className="news-side-content flex-grow-1">
+                          <span className="text-muted small d-block mb-1"><i className="fa fa-calendar me-1"></i>{item.date}</span>
+                          <h6 className="text-dark mb-2" style={{ fontSize: '1rem', fontWeight: '600', lineHeight: '1.4' }}>
+                            {item.title}
+                          </h6>
+                          <p className="text-muted small mb-0" style={{ fontSize: '0.875rem', lineHeight: '1.5' }}>
+                            {item.excerpt}
+                          </p>
+                        </div>
+                      </Link>
+            </div>
+                  ))}
+                  </div>
+                </div>
+              </div>
+
+            <div className="row g-4 mt-2">
+              {news.grid.map((item, index) => (
+                <div key={item.id} className="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay={`${0.6 + index * 0.1}s`}>
+                  <Link href={`/news/${item.id}`} className="text-decoration-none">
+                    <div className="news-card rounded overflow-hidden h-100" style={{ 
+                      boxShadow: '0 0 45px rgba(0, 0, 0, .08)',
+                      transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+                    }}>
+                      <div className="news-card-image-wrapper position-relative overflow-hidden" style={{ height: '200px' }}>
+                        <img 
+                          src={item.image} 
+                          alt={item.title} 
+                          className="img-fluid w-100 h-100"
+                          style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                        />
+                      </div>
+                      <div className="news-card-content p-3">
+                        <span className="text-muted small d-block mb-2"><i className="fa fa-calendar me-1"></i>{item.date}</span>
+                        <h6 className="text-dark mb-2" style={{ fontSize: '1.1rem', fontWeight: '600', lineHeight: '1.4' }}>
+                          {item.title}
+                        </h6>
+                        <p className="text-muted small mb-0" style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
+                          {item.excerpt}
+                        </p>
+                  </div>
+                </div>
+                  </Link>
+              </div>
+              ))}
+                  </div>
+                </div>
+              </div>
+        {/* News Section End */}
 
         {/* Service Start */}
         <div className="container-xxl py-4 py-md-5">
           <div className="container">
             <div className="text-center wow fadeInUp" data-wow-delay="0.1s">
-              <h5 className="section-title ff-secondary text-center text-primary fw-normal">Dịch Vụ</h5>
-              <h1 className="mb-5">Dịch Vụ Của Chúng Tôi</h1>
+              <h5 className="section-title ff-secondary text-center text-primary fw-normal">{services.sectionTitle}</h5>
+              <h1 className="mb-5">{services.heading}</h1>
             </div>
             <div className="row g-3 g-md-4">
-              <div className="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
+              {services.items.map((item, index) => (
+                <div key={item.title} className="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay={`${0.1 + index * 0.2}s`}>
                 <div className="service-item rounded pt-3">
                   <div className="p-4">
-                    <i className="fa fa-3x fa-tools text-primary mb-4"></i>
-                    <h5>Thiết Kế Chuyên Nghiệp</h5>
-                    <p>Đội ngũ thiết kế giàu kinh nghiệm, tư vấn giải pháp phù hợp với từng công trình</p>
+                      <i className={`fa fa-3x ${item.icon} text-primary mb-4`}></i>
+                      <h5>{item.title}</h5>
+                      <p>{item.description}</p>
                   </div>
                 </div>
               </div>
-              <div className="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
-                <div className="service-item rounded pt-3">
-                  <div className="p-4">
-                    <i className="fa fa-3x fa-industry text-primary mb-4"></i>
-                    <h5>Sản Xuất Chất Lượng</h5>
-                    <p>Xưởng sản xuất hiện đại, đảm bảo chất lượng sản phẩm đạt tiêu chuẩn cao nhất</p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.5s">
-                <div className="service-item rounded pt-3">
-                  <div className="p-4">
-                    <i className="fa fa-3x fa-hammer text-primary mb-4"></i>
-                    <h5>Thi Công Tận Nơi</h5>
-                    <p>Đội ngũ thợ lành nghề, thi công nhanh chóng, đúng tiến độ, đảm bảo chất lượng</p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
-                <div className="service-item rounded pt-3">
-                  <div className="p-4">
-                    <i className="fa fa-3x fa-headset text-primary mb-4"></i>
-                    <h5>Bảo Hành Dài Hạn</h5>
-                    <p>Chế độ bảo hành uy tín, hỗ trợ bảo trì, sửa chữa nhanh chóng khi cần thiết</p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -328,161 +598,162 @@ export default function Home() {
                 </div>
               </div>
               <div className="col-lg-6">
-                <h5 className="section-title ff-secondary text-start text-primary fw-normal">Về Chúng Tôi</h5>
-                <h1 className="mb-4">Chào Mừng Đến Với <i className="fa fa-building text-primary me-2"></i>Nhôm Kính</h1>
-                <p className="mb-4">Chúng tôi là đơn vị chuyên thiết kế, sản xuất và thi công các sản phẩm nhôm kính chất lượng cao. Với nhiều năm kinh nghiệm trong ngành, chúng tôi tự hào mang đến những giải pháp nhôm kính hoàn hảo cho mọi công trình.</p>
-                <p className="mb-4">Đội ngũ kỹ thuật viên giàu kinh nghiệm, xưởng sản xuất hiện đại cùng quy trình làm việc chuyên nghiệp, chúng tôi cam kết mang đến những sản phẩm chất lượng, đẹp mắt và bền bỉ theo thời gian.</p>
+                  <h5 className="section-title ff-secondary text-start text-primary fw-normal">{about.sectionTitle}</h5>
+                  <h1 className="mb-4">{about.heading}</h1>
+                  <p className="mb-4">{about.description1}</p>
+                  <p className="mb-4">{about.description2}</p>
                 <div className="row g-4 mb-4">
                   <div className="col-sm-6">
                     <div className="d-flex align-items-center border-start border-5 border-primary px-3">
-                      <h1 className="flex-shrink-0 display-5 text-primary mb-0" data-toggle="counter-up">10</h1>
+                        <h1 className="flex-shrink-0 display-5 text-primary mb-0" data-toggle="counter-up">{about.counters.years.value}</h1>
                       <div className="ps-4">
-                        <p className="mb-0">Năm</p>
-                        <h6 className="text-uppercase mb-0">Kinh Nghiệm</h6>
+                          <p className="mb-0">{about.counters.years.labelTop}</p>
+                          <h6 className="text-uppercase mb-0">{about.counters.years.labelBottom}</h6>
                       </div>
                     </div>
                   </div>
                   <div className="col-sm-6">
                     <div className="d-flex align-items-center border-start border-5 border-primary px-3">
-                      <h1 className="flex-shrink-0 display-5 text-primary mb-0" data-toggle="counter-up">500</h1>
+                        <h1 className="flex-shrink-0 display-5 text-primary mb-0" data-toggle="counter-up">{about.counters.projects.value}</h1>
                       <div className="ps-4">
-                        <p className="mb-0">Dự Án</p>
-                        <h6 className="text-uppercase mb-0">Đã Hoàn Thành</h6>
+                          <p className="mb-0">{about.counters.projects.labelTop}</p>
+                          <h6 className="text-uppercase mb-0">{about.counters.projects.labelBottom}</h6>
                       </div>
                     </div>
                   </div>
                 </div>
-                <Link href="/about" className="btn btn-primary py-3 px-5 mt-2">Xem Thêm</Link>
+                  <Link href="/about" className="btn btn-primary py-3 px-5 mt-2">{about.button}</Link>
               </div>
             </div>
           </div>
         </div>
         {/* About End */}
 
-        {/* Menu Start */}
+        {/* Projects Section Start */}
         <div className="container-xxl py-5">
           <div className="container">
             <div className="text-center wow fadeInUp" data-wow-delay="0.1s">
-              <h5 className="section-title ff-secondary text-center text-primary fw-normal">Dự Án</h5>
-              <h1 className="mb-5">Dự Án Tiêu Biểu</h1>
+              <h5 className="section-title ff-secondary text-center text-primary fw-normal">{projectsSection.sectionTitle}</h5>
+              <h1 className="mb-5">{projectsSection.heading}</h1>
+                    </div>
+                  <div className="row g-4">
+              {/* Dự án chính - bên trái */}
+              <div className="col-lg-8">
+                <div className="news-main-item wow fadeInUp" data-wow-delay="0.1s">
+                  <Link href={`/project/${featuredProject.id}`} className="text-decoration-none">
+                    <div className="news-main-image-wrapper position-relative overflow-hidden rounded mb-3">
+                      <img 
+                        src={featuredProject.image} 
+                        alt={featuredProject.title} 
+                        className="img-fluid w-100 news-main-image"
+                        style={{ height: '450px', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                      />
+                      <div className="news-overlay position-absolute bottom-0 start-0 w-100 p-4" style={{
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)'
+                      }}>
+                        <span className="text-white-50 small">
+                          <i className="fa fa-map-marker-alt me-2"></i>{featuredProject.location}
+                          {featuredProject.area && (
+                            <>
+                              <span className="mx-2">•</span>
+                              <i className="fa fa-ruler-combined me-1"></i>
+                              {featuredProject.area}
+                            </>
+                          )}
+                          {featuredProject.year && (
+                            <>
+                              <span className="mx-2">•</span>
+                              <i className="fa fa-calendar me-1"></i>
+                              {featuredProject.year}
+                            </>
+                          )}
+                        </span>
+                        <h3 className="text-white mt-2 mb-2" style={{ fontSize: '1.75rem', fontWeight: '600' }}>
+                          {featuredProject.title}
+                        </h3>
+                        <p className="text-white mb-0" style={{ fontSize: '1rem', lineHeight: '1.6' }}>
+                          {featuredProject.description}
+                        </p>
+                          </div>
+                        </div>
+                  </Link>
+                  </div>
+                </div>
+
+              {/* Các dự án nhỏ - bên phải */}
+              <div className="col-lg-4">
+                <div className="news-sidebar">
+                  {sideProjects.map((project, index) => (
+                    <div key={project.id} className={`news-side-item ${index < sideProjects.length - 1 ? 'mb-4' : ''} wow fadeInUp`} data-wow-delay={`${0.2 + index * 0.1}s`}>
+                      <Link href={`/project/${project.id}`} className="text-decoration-none d-flex">
+                        <div className="news-side-image-wrapper flex-shrink-0 me-3" style={{ width: '120px', height: '100px' }}>
+                          <img 
+                            src={project.image} 
+                            alt={project.title} 
+                            className="img-fluid w-100 h-100 rounded"
+                            style={{ objectFit: 'cover' }}
+                          />
+                          </div>
+                        <div className="news-side-content flex-grow-1">
+                          <span className="text-muted small d-block mb-1">
+                            <i className="fa fa-map-marker-alt me-1"></i>{project.location}
+                          </span>
+                          <h6 className="text-dark mb-2" style={{ fontSize: '1rem', fontWeight: '600', lineHeight: '1.4' }}>
+                            {project.title}
+                          </h6>
+                          <p className="text-muted small mb-0" style={{ fontSize: '0.875rem', lineHeight: '1.5' }}>
+                            {project.description.substring(0, 60)}...
+                          </p>
+                        </div>
+                      </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
             </div>
-            <div className="tab-class text-center wow fadeInUp" data-wow-delay="0.1s">
-              <ul className="nav nav-pills d-inline-flex justify-content-center border-bottom mb-5">
-                <li className="nav-item">
-                  <a className="d-flex align-items-center text-start mx-3 ms-0 pb-3 active" data-bs-toggle="pill" href="#tab-1">
-                    <i className="fa fa-building fa-2x text-primary"></i>
-                    <div className="ps-3">
-                      <small className="text-body">Nhà Ở</small>
-                      <h6 className="mt-n1 mb-0">Biệt Thự & Nhà Phố</h6>
-                    </div>
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a className="d-flex align-items-center text-start mx-3 pb-3" data-bs-toggle="pill" href="#tab-2">
-                    <i className="fa fa-briefcase fa-2x text-primary"></i>
-                    <div className="ps-3">
-                      <small className="text-body">Văn Phòng</small>
-                      <h6 className="mt-n1 mb-0">Công Ty & Showroom</h6>
-                    </div>
-                  </a>
-                </li>
-                <li className="nav-item">
-                  <a className="d-flex align-items-center text-start mx-3 me-0 pb-3" data-bs-toggle="pill" href="#tab-3">
-                    <i className="fa fa-store fa-2x text-primary"></i>
-                    <div className="ps-3">
-                      <small className="text-body">Thương Mại</small>
-                      <h6 className="mt-n1 mb-0">Cửa Hàng & Trung Tâm</h6>
-                    </div>
-                  </a>
-                </li>
-              </ul>
-              <div className="tab-content">
-                <div id="tab-1" className="tab-pane fade show p-0 active">
-                  <div className="row g-4">
-                    {[
-                      { name: "Cửa Nhôm Xingfa Biệt Thự", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Kính 4 Cánh", price: "Liên hệ" },
-                      { name: "Vách Kính Phòng Khách", price: "Liên hệ" },
-                      { name: "Mái Kính Sân Vườn", price: "Liên hệ" },
-                      { name: "Cửa Lùa Ban Công", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Việt Pháp", price: "Liên hệ" },
-                      { name: "Vách Kính Ngăn Phòng", price: "Liên hệ" },
-                      { name: "Mái Kính Che Cửa", price: "Liên hệ" }
-                    ].map((item, i) => (
-                      <div key={i} className="col-lg-6">
-                        <div className="d-flex align-items-center">
-                          <img className="flex-shrink-0 img-fluid rounded" src={`https://images.unsplash.com/photo-${['1600607687939-ce8a6c25118c', '1600607687920-4e2a09cf159d', '1600607687644-c7171b42498b', '1600566753190-17f0baa2a6c3', '1600607687939-ce8a6c25118c', '1600607687920-4e2a09cf159d', '1600607687644-c7171b42498b', '1600566753190-17f0baa2a6c3'][i % 8]}?w=200&q=80`} alt="Sản phẩm nhôm kính" style={{ width: '80px' }} />
-                          <div className="w-100 d-flex flex-column text-start ps-4">
-                            <h5 className="d-flex justify-content-between border-bottom pb-2">
-                              <span>{item.name}</span>
-                              <span className="text-primary">{item.price}</span>
-                            </h5>
-                            <small className="fst-italic">Sản phẩm chất lượng cao, thi công chuyên nghiệp</small>
-                          </div>
-                        </div>
+
+            {/* Thêm các dự án khác dạng grid */}
+            <div className="row g-4 mt-2">
+              {gridProjects.map((project, index) => (
+                <div key={project.id} className="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay={`${0.6 + index * 0.1}s`}>
+                  <Link href={`/project/${project.id}`} className="text-decoration-none">
+                    <div className="news-card rounded overflow-hidden h-100" style={{ 
+                      boxShadow: '0 0 45px rgba(0, 0, 0, .08)',
+                      transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+                    }}>
+                      <div className="news-card-image-wrapper position-relative overflow-hidden" style={{ height: '200px' }}>
+                        <img 
+                          src={project.image} 
+                          alt={project.title} 
+                          className="img-fluid w-100 h-100"
+                          style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                        />
                       </div>
-                    ))}
-                  </div>
-                </div>
-                <div id="tab-2" className="tab-pane fade show p-0">
-                  <div className="row g-4">
-                    {[
-                      { name: "Vách Kính Văn Phòng", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Kính Văn Phòng", price: "Liên hệ" },
-                      { name: "Vách Kính Mặt Tiền", price: "Liên hệ" },
-                      { name: "Cửa Trượt Văn Phòng", price: "Liên hệ" },
-                      { name: "Vách Kính Ngăn Phòng Họp", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Kính Showroom", price: "Liên hệ" },
-                      { name: "Vách Kính Cường Lực", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Kính Công Ty", price: "Liên hệ" }
-                    ].map((item, i) => (
-                      <div key={i} className="col-lg-6">
-                        <div className="d-flex align-items-center">
-                          <img className="flex-shrink-0 img-fluid rounded" src={`https://images.unsplash.com/photo-${['1600607687939-ce8a6c25118c', '1600607687920-4e2a09cf159d', '1600607687644-c7171b42498b', '1600566753190-17f0baa2a6c3', '1600607687939-ce8a6c25118c', '1600607687920-4e2a09cf159d', '1600607687644-c7171b42498b', '1600566753190-17f0baa2a6c3'][i % 8]}?w=200&q=80`} alt="Sản phẩm nhôm kính" style={{ width: '80px' }} />
-                          <div className="w-100 d-flex flex-column text-start ps-4">
-                            <h5 className="d-flex justify-content-between border-bottom pb-2">
-                              <span>{item.name}</span>
-                              <span className="text-primary">{item.price}</span>
-                            </h5>
-                            <small className="fst-italic">Thiết kế hiện đại, phù hợp không gian làm việc</small>
+                      <div className="news-card-content p-3">
+                        <span className="text-muted small d-block mb-2">
+                          <i className="fa fa-map-marker-alt me-1"></i>{project.location}
+                          {project.area && (
+                            <>
+                              <span className="mx-2">•</span>
+                              {project.area}
+                            </>
+                          )}
+                        </span>
+                        <h6 className="text-dark mb-2" style={{ fontSize: '1.1rem', fontWeight: '600', lineHeight: '1.4' }}>
+                          {project.title}
+                        </h6>
+                        <p className="text-muted small mb-0" style={{ fontSize: '0.9rem', lineHeight: '1.6' }}>
+                          {project.description.substring(0, 80)}...
+                        </p>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div id="tab-3" className="tab-pane fade show p-0">
-                  <div className="row g-4">
-                    {[
-                      { name: "Vách Kính Cửa Hàng", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Kính Trung Tâm", price: "Liên hệ" },
-                      { name: "Vách Kính Showroom", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Kính Siêu Thị", price: "Liên hệ" },
-                      { name: "Vách Kính Mặt Tiền", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Kính Cửa Hàng", price: "Liên hệ" },
-                      { name: "Vách Kính Trung Tâm", price: "Liên hệ" },
-                      { name: "Cửa Nhôm Kính Thương Mại", price: "Liên hệ" }
-                    ].map((item, i) => (
-                      <div key={i} className="col-lg-6">
-                        <div className="d-flex align-items-center">
-                          <img className="flex-shrink-0 img-fluid rounded" src={`https://images.unsplash.com/photo-${['1600607687939-ce8a6c25118c', '1600607687920-4e2a09cf159d', '1600607687644-c7171b42498b', '1600566753190-17f0baa2a6c3', '1600607687939-ce8a6c25118c', '1600607687920-4e2a09cf159d', '1600607687644-c7171b42498b', '1600566753190-17f0baa2a6c3'][i % 8]}?w=200&q=80`} alt="Sản phẩm nhôm kính" style={{ width: '80px' }} />
-                          <div className="w-100 d-flex flex-column text-start ps-4">
-                            <h5 className="d-flex justify-content-between border-bottom pb-2">
-                              <span>{item.name}</span>
-                              <span className="text-primary">{item.price}</span>
-                            </h5>
-                            <small className="fst-italic">Thiết kế sang trọng, thu hút khách hàng</small>
-                          </div>
-                        </div>
+                  </Link>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-        {/* Menu End */}
+        {/* Projects Section End */}
 
         {/* Reservation Start */}
         <div className="container-xxl py-5 px-0 wow fadeInUp" data-wow-delay="0.1s">
@@ -496,47 +767,46 @@ export default function Home() {
             </div>
             <div className="col-md-6 bg-dark d-flex align-items-center">
               <div className="p-5 wow fadeInUp" data-wow-delay="0.2s">
-                <h5 className="section-title ff-secondary text-start text-primary fw-normal">Liên Hệ</h5>
-                <h1 className="text-white mb-4">Yêu Cầu Báo Giá</h1>
+                <h5 className="section-title ff-secondary text-start text-primary fw-normal">{reservation.sectionTitle}</h5>
+                <h1 className="text-white mb-4">{reservation.heading}</h1>
                 <form>
                   <div className="row g-3">
                     <div className="col-md-6">
                       <div className="form-floating">
-                        <input type="text" className="form-control" id="name" placeholder="Họ và Tên" />
-                        <label htmlFor="name">Họ và Tên</label>
+                        <input type="text" className="form-control" id="name" placeholder={reservation.form.name} />
+                        <label htmlFor="name">{reservation.form.name}</label>
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="form-floating">
-                        <input type="email" className="form-control" id="email" placeholder="Email" />
-                        <label htmlFor="email">Email</label>
+                        <input type="email" className="form-control" id="email" placeholder={reservation.form.email} />
+                        <label htmlFor="email">{reservation.form.email}</label>
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="form-floating">
-                        <input type="tel" className="form-control" id="phone" placeholder="Số Điện Thoại" />
-                        <label htmlFor="phone">Số Điện Thoại</label>
+                        <input type="tel" className="form-control" id="phone" placeholder={reservation.form.phone} />
+                        <label htmlFor="phone">{reservation.form.phone}</label>
                       </div>
                     </div>
                     <div className="col-md-6">
                       <div className="form-floating">
-                        <select className="form-select" id="select1">
-                          <option value="1">Cửa Nhôm Kính</option>
-                          <option value="2">Vách Kính</option>
-                          <option value="3">Mái Kính</option>
-                          <option value="4">Khác</option>
+                        <select className="form-select" id="select1" defaultValue={reservation.form.productOptions[0]?.value ?? ''}>
+                          {reservation.form.productOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
                         </select>
-                        <label htmlFor="select1">Loại Sản Phẩm</label>
+                        <label htmlFor="select1">{reservation.form.productType}</label>
                       </div>
                     </div>
                     <div className="col-12">
                       <div className="form-floating">
-                        <textarea className="form-control" placeholder="Yêu cầu chi tiết" id="message" style={{ height: '100px' }}></textarea>
-                        <label htmlFor="message">Yêu Cầu Chi Tiết</label>
+                        <textarea className="form-control" placeholder={reservation.form.message} id="message" style={{ height: '100px' }}></textarea>
+                        <label htmlFor="message">{reservation.form.message}</label>
                       </div>
                     </div>
                     <div className="col-12">
-                      <button className="btn btn-primary w-100 py-3" type="submit">Gửi Yêu Cầu</button>
+                      <button className="btn btn-primary w-100 py-3" type="submit">{reservation.form.submit}</button>
                     </div>
                   </div>
                 </form>
@@ -562,60 +832,6 @@ export default function Home() {
         </div>
         {/* Reservation End */}
 
-        {/* Team Start */}
-        <div className="container-xxl pt-5 pb-3">
-          <div className="container">
-            <div className="text-center wow fadeInUp" data-wow-delay="0.1s">
-              <h5 className="section-title ff-secondary text-center text-primary fw-normal">Team Members</h5>
-              <h1 className="mb-5">Our Master Chefs</h1>
-            </div>
-            <div className="row g-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay={`${i * 0.2}s`}>
-                  <div className="team-item text-center rounded overflow-hidden">
-                    <div className="rounded-circle overflow-hidden m-4">
-                      <img className="img-fluid" src={`https://images.unsplash.com/photo-${['1507003211169-0a1dd7228f2d', '1494790108377-be9c29b29330', '1500648767791-00dcc994a43e', '1506794778202-cad84cf45f1d'][i - 1]}?w=400&q=80`} alt="Đội ngũ nhân viên" />
-                    </div>
-                    <h5 className="mb-0">Full Name</h5>
-                    <small>Designation</small>
-                    <div className="d-flex justify-content-center mt-3">
-                      <a className="btn btn-square btn-primary mx-1" href=""><i className="fab fa-facebook-f"></i></a>
-                      <a className="btn btn-square btn-primary mx-1" href=""><i className="fab fa-twitter"></i></a>
-                      <a className="btn btn-square btn-primary mx-1" href=""><i className="fab fa-instagram"></i></a>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        {/* Team End */}
-
-        {/* Testimonial Start */}
-        <div className="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
-          <div className="container">
-            <div className="text-center">
-              <h5 className="section-title ff-secondary text-center text-primary fw-normal">Testimonial</h5>
-              <h1 className="mb-5">Our Clients Say!!!</h1>
-            </div>
-            <div className="owl-carousel testimonial-carousel">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="testimonial-item bg-transparent border rounded p-4">
-                  <i className="fa fa-quote-left fa-2x text-primary mb-3"></i>
-                  <p>Dolor et eos labore, stet justo sed est sed. Diam sed sed dolor stet amet eirmod eos labore diam</p>
-                  <div className="d-flex align-items-center">
-                    <img className="img-fluid flex-shrink-0 rounded-circle" src={`https://images.unsplash.com/photo-${['1507003211169-0a1dd7228f2d', '1494790108377-be9c29b29330', '1500648767791-00dcc994a43e', '1506794778202-cad84cf45f1d'][i - 1]}?w=100&q=80`} alt="Khách hàng" style={{ width: '50px', height: '50px' }} />
-                    <div className="ps-3">
-                      <h5 className="mb-1">Client Name</h5>
-                      <small>Profession</small>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        {/* Testimonial End */}
       </Layout>
     </>
   )

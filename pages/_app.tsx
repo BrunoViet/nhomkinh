@@ -1,57 +1,85 @@
 import type { AppProps } from 'next/app'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
 import '../styles/globals.css'
+import { LanguageProvider } from '@/contexts/LanguageContext'
 
 export default function App({ Component, pageProps }: AppProps) {
+  const [momentLoaded, setMomentLoaded] = useState(false)
+  const [momentTimezoneLoaded, setMomentTimezoneLoaded] = useState(false)
+  const scriptsInitializedRef = useRef(false)
+  const [isClientReady, setIsClientReady] = useState(false)
+
   useEffect(() => {
-    // Load jQuery and Bootstrap
-    if (typeof window !== 'undefined') {
-      // Initialize scripts after component mounts
-      const initScripts = () => {
-        if (window.jQuery) {
-          // Initialize WOW.js (loaded from local file)
-          if (window.WOW) {
-            new window.WOW().init()
-          }
-          
-          // Initialize counterUp after waypoints and counterup are loaded
-          const initCounterUp = () => {
-            if (window.jQuery && window.jQuery.fn && window.jQuery.fn.counterUp) {
-              window.jQuery('[data-toggle="counter-up"]').counterUp({
-                delay: 10,
-                time: 2000
-              })
-            } else {
-              // Retry after a short delay
-              setTimeout(initCounterUp, 100)
-            }
-          }
-          
-          // Wait a bit for counterup to load
-          setTimeout(initCounterUp, 500)
+    if (scriptsInitializedRef.current) return
+    scriptsInitializedRef.current = true
+
+    if (typeof window === 'undefined') return
+
+    const initScripts = () => {
+      if (!window.jQuery) return
+
+      if (window.WOW) {
+        new window.WOW().init()
+      }
+
+      const initCounterUp = () => {
+        if (window.jQuery?.fn?.counterUp) {
+          window.jQuery('[data-toggle="counter-up"]').counterUp({
+            delay: 10,
+            time: 2000
+          })
+        } else {
+          setTimeout(initCounterUp, 150)
         }
       }
 
-      // Wait for jQuery to load
-      const checkJQuery = setInterval(() => {
-        if (window.jQuery) {
-          clearInterval(checkJQuery)
-          initScripts()
-        }
-      }, 100)
-
-      return () => clearInterval(checkJQuery)
+      setTimeout(initCounterUp, 400)
     }
+
+    const waitForJQuery = () => {
+      if (window.jQuery) {
+        initScripts()
+        return
+      }
+      setTimeout(waitForJQuery, 100)
+    }
+
+    waitForJQuery()
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const readyTimeout = window.requestAnimationFrame(() => setIsClientReady(true))
+    return () => window.cancelAnimationFrame(readyTimeout)
+  }, [])
+
+  const renderFallback = () => (
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0f172b',
+        color: '#fff',
+        flexDirection: 'column',
+        gap: '1rem'
+      }}
+    >
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Loading...</span>
+      </div>
+      <div>Đang tải nội dung ...</div>
+    </div>
+  )
+
   return (
-    <>
+    <LanguageProvider>
       <Script
         src="https://code.jquery.com/jquery-3.4.1.min.js"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         onLoad={() => {
-          // Set jQuery to window after load
           if (typeof window !== 'undefined' && window.jQuery) {
             window.$ = window.jQuery
           }
@@ -59,13 +87,7 @@ export default function App({ Component, pageProps }: AppProps) {
       />
       <Script
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        strategy="beforeInteractive"
-        onLoad={() => {
-          // Ensure Bootstrap is properly initialized
-          if (typeof window !== 'undefined' && (window as any).bootstrap) {
-            // Bootstrap loaded successfully
-          }
-        }}
+        strategy="afterInteractive"
       />
       <Script
         src="/lib/wow/wow.min.js"
@@ -90,21 +112,37 @@ export default function App({ Component, pageProps }: AppProps) {
       <Script
         src="/lib/tempusdominus/js/moment.min.js"
         strategy="lazyOnload"
+        onLoad={() => {
+          // Verify moment is loaded before loading moment-timezone
+          if (typeof window !== 'undefined' && (window as any).moment) {
+            setMomentLoaded(true)
+          }
+        }}
       />
-      <Script
-        src="/lib/tempusdominus/js/moment-timezone.min.js"
-        strategy="lazyOnload"
-      />
-      <Script
-        src="/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"
-        strategy="lazyOnload"
-      />
+      {momentLoaded && (
+        <Script
+          src="/lib/tempusdominus/js/moment-timezone.min.js"
+          strategy="lazyOnload"
+          onLoad={() => {
+            // Verify moment-timezone is loaded before loading tempusdominus
+            if (typeof window !== 'undefined' && (window as any).moment && (window as any).moment.tz) {
+              setMomentTimezoneLoaded(true)
+            }
+          }}
+        />
+      )}
+      {momentTimezoneLoaded && (
+        <Script
+          src="/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"
+          strategy="lazyOnload"
+        />
+      )}
       <Script
         src="/js/main.js"
         strategy="lazyOnload"
       />
-      <Component {...pageProps} />
-    </>
+      {isClientReady ? <Component {...pageProps} /> : renderFallback()}
+    </LanguageProvider>
   )
 }
 

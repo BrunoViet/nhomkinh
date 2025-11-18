@@ -11,9 +11,14 @@ interface Product {
 interface ProductCarouselProps {
   products: Product[]
   title?: string
+  subtitle?: string
 }
 
-export default function ProductCarousel({ products, title = "Sản Phẩm" }: ProductCarouselProps) {
+export default function ProductCarousel({
+  products,
+  title = 'Sản Phẩm',
+  subtitle = 'Sản Phẩm Nổi Bật'
+}: ProductCarouselProps) {
   const carouselRef = useRef<HTMLDivElement>(null)
   const [isDesktop, setIsDesktop] = useState(false)
 
@@ -116,7 +121,7 @@ export default function ProductCarousel({ products, title = "Sản Phẩm" }: Pr
               {title && (
                 <div className="text-center wow fadeInUp" data-wow-delay="0.1s">
                   <h5 className="section-title ff-secondary text-center text-primary fw-normal">{title}</h5>
-                  <h1 className="mb-5">Sản Phẩm Nổi Bật</h1>
+                  <h1 className="mb-5">{subtitle}</h1>
                 </div>
               )}
               <div className="product-carousel-wrapper">

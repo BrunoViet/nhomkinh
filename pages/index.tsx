@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import Image from 'next/image'
 import Layout from '@/components/Layout'
 import ProductCarousel from '@/components/ProductCarousel'
 import { useEffect, useState, useMemo } from 'react'
@@ -182,11 +183,15 @@ export default function Home() {
                           }}
                         >
                           {bannerImages.map((image, index) => (
-                            <img 
+                            <Image
                               key={index}
                               className={`img-fluid hero-rotating-img ${index === currentSlide ? 'active' : ''}`}
-                              src={image} 
-                              alt="" 
+                              src={image}
+                              alt=""
+                              width={600}
+                              height={400}
+                              priority={index === 0}
+                              loading={index === 0 ? 'eager' : 'lazy'}
                               style={{
                                 position: index === currentSlide ? 'relative' : 'absolute',
                                 maxWidth: '100%',
@@ -402,12 +407,14 @@ export default function Home() {
                                   e.currentTarget.style.paddingLeft = '16px'
                                 }}
                               >
-                                <div className="flex-shrink-0 me-3" style={{ width: '50px', height: '50px' }}>
-                                  <img 
+                                <div className="flex-shrink-0 me-3" style={{ width: '50px', height: '50px', position: 'relative' }}>
+                                  <Image 
                                     src={product.image} 
                                     alt={product.name}
-                                    className="img-fluid rounded"
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    fill
+                                    className="rounded"
+                                    style={{ objectFit: 'cover' }}
+                                    sizes="50px"
                                   />
                                 </div>
                                 <div className="flex-grow-1">
@@ -467,12 +474,15 @@ export default function Home() {
               <div className="col-lg-8">
                 <div className="news-main-item wow fadeInUp" data-wow-delay="0.1s">
                   <Link href={`/news/${news.main.id}`} className="text-decoration-none">
-                    <div className="news-main-image-wrapper position-relative overflow-hidden rounded mb-3">
-                      <img 
+                    <div className="news-main-image-wrapper position-relative overflow-hidden rounded mb-3" style={{ height: '450px' }}>
+                      <Image 
                         src={news.main.image} 
                         alt={news.main.title} 
-                        className="img-fluid w-100 news-main-image"
-                        style={{ height: '450px', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                        fill
+                        className="news-main-image"
+                        style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                        sizes="(max-width: 768px) 100vw, 66vw"
+                        priority
                       />
                       <div className="news-overlay position-absolute bottom-0 start-0 w-100 p-4" style={{
                         background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)'
@@ -495,12 +505,14 @@ export default function Home() {
                   {news.sidebar.map((item, index) => (
                     <div key={item.id} className={`news-side-item ${index < news.sidebar.length - 1 ? 'mb-4' : ''} wow fadeInUp`} data-wow-delay={`${0.2 + index * 0.1}s`}>
                       <Link href={`/news/${item.id}`} className="text-decoration-none d-flex">
-                        <div className="news-side-image-wrapper flex-shrink-0 me-3" style={{ width: '120px', height: '100px' }}>
-                          <img 
+                        <div className="news-side-image-wrapper flex-shrink-0 me-3" style={{ width: '120px', height: '100px', position: 'relative' }}>
+                          <Image 
                             src={item.image} 
                             alt={item.title} 
-                            className="img-fluid w-100 h-100 rounded"
+                            fill
+                            className="rounded"
                             style={{ objectFit: 'cover' }}
+                            sizes="120px"
                           />
                         </div>
                         <div className="news-side-content flex-grow-1">
@@ -528,11 +540,13 @@ export default function Home() {
                       transition: 'transform 0.3s ease, box-shadow 0.3s ease'
                     }}>
                       <div className="news-card-image-wrapper position-relative overflow-hidden" style={{ height: '200px' }}>
-                        <img 
+                        <Image 
                           src={item.image} 
                           alt={item.title} 
-                          className="img-fluid w-100 h-100"
+                          fill
+                          className="w-100 h-100"
                           style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       </div>
                       <div className="news-card-content p-3">
@@ -583,17 +597,17 @@ export default function Home() {
             <div className="row g-5 align-items-center">
               <div className="col-lg-6">
                 <div className="row g-3">
-                  <div className="col-6 text-start">
-                    <img className="img-fluid rounded w-100 wow zoomIn" data-wow-delay="0.1s" src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80" alt="Cửa nhôm kính" />
+                  <div className="col-6 text-start" style={{ position: 'relative', minHeight: '200px' }}>
+                    <Image className="img-fluid rounded w-100 wow zoomIn" data-wow-delay="0.1s" src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80" alt="Cửa nhôm kính" fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 50vw, 25vw" />
                   </div>
-                  <div className="col-6 text-start">
-                    <img className="img-fluid rounded w-75 wow zoomIn" data-wow-delay="0.3s" src="https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&q=80" alt="Vách kính" style={{ marginTop: '25%' }} />
+                  <div className="col-6 text-start" style={{ position: 'relative', minHeight: '200px' }}>
+                    <Image className="img-fluid rounded w-75 wow zoomIn" data-wow-delay="0.3s" src="https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&q=80" alt="Vách kính" style={{ marginTop: '25%', objectFit: 'cover' }} fill sizes="(max-width: 768px) 50vw, 25vw" />
                   </div>
-                  <div className="col-6 text-end">
-                    <img className="img-fluid rounded w-75 wow zoomIn" data-wow-delay="0.5s" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80" alt="Cửa kính hiện đại" />
+                  <div className="col-6 text-end" style={{ position: 'relative', minHeight: '200px' }}>
+                    <Image className="img-fluid rounded w-75 wow zoomIn" data-wow-delay="0.5s" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800&q=80" alt="Cửa kính hiện đại" fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 50vw, 25vw" />
                   </div>
-                  <div className="col-6 text-end">
-                    <img className="img-fluid rounded w-100 wow zoomIn" data-wow-delay="0.7s" src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80" alt="Nhôm kính" />
+                  <div className="col-6 text-end" style={{ position: 'relative', minHeight: '200px' }}>
+                    <Image className="img-fluid rounded w-100 wow zoomIn" data-wow-delay="0.7s" src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80" alt="Nhôm kính" fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 50vw, 25vw" />
                   </div>
                 </div>
               </div>
@@ -641,12 +655,14 @@ export default function Home() {
               <div className="col-lg-8">
                 <div className="news-main-item wow fadeInUp" data-wow-delay="0.1s">
                   <Link href={`/project/${featuredProject.id}`} className="text-decoration-none">
-                    <div className="news-main-image-wrapper position-relative overflow-hidden rounded mb-3">
-                      <img 
+                    <div className="news-main-image-wrapper position-relative overflow-hidden rounded mb-3" style={{ height: '450px' }}>
+                      <Image 
                         src={featuredProject.image} 
                         alt={featuredProject.title} 
-                        className="img-fluid w-100 news-main-image"
-                        style={{ height: '450px', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                        fill
+                        className="news-main-image"
+                        style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                        sizes="(max-width: 768px) 100vw, 66vw"
                       />
                       <div className="news-overlay position-absolute bottom-0 start-0 w-100 p-4" style={{
                         background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)'
@@ -686,12 +702,14 @@ export default function Home() {
                   {sideProjects.map((project, index) => (
                     <div key={project.id} className={`news-side-item ${index < sideProjects.length - 1 ? 'mb-4' : ''} wow fadeInUp`} data-wow-delay={`${0.2 + index * 0.1}s`}>
                       <Link href={`/project/${project.id}`} className="text-decoration-none d-flex">
-                        <div className="news-side-image-wrapper flex-shrink-0 me-3" style={{ width: '120px', height: '100px' }}>
-                          <img 
+                        <div className="news-side-image-wrapper flex-shrink-0 me-3" style={{ width: '120px', height: '100px', position: 'relative' }}>
+                          <Image 
                             src={project.image} 
                             alt={project.title} 
-                            className="img-fluid w-100 h-100 rounded"
+                            fill
+                            className="rounded"
                             style={{ objectFit: 'cover' }}
+                            sizes="120px"
                           />
                           </div>
                         <div className="news-side-content flex-grow-1">
@@ -722,11 +740,13 @@ export default function Home() {
                       transition: 'transform 0.3s ease, box-shadow 0.3s ease'
                     }}>
                       <div className="news-card-image-wrapper position-relative overflow-hidden" style={{ height: '200px' }}>
-                        <img 
+                        <Image 
                           src={project.image} 
                           alt={project.title} 
-                          className="img-fluid w-100 h-100"
+                          fill
+                          className="w-100 h-100"
                           style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       </div>
                       <div className="news-card-content p-3">

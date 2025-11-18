@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface Product {
   id: number
@@ -132,8 +133,14 @@ export default function ProductCarousel({
                 <div key={product.id} className="product-item">
                   <Link href={`/product/${product.id}`} className="product-card-link">
                     <div className="product-card">
-                      <div className="product-image-wrapper">
-                        <img src={product.image} alt={product.name} className="product-image" />
+                      <div className="product-image-wrapper" style={{ position: 'relative' }}>
+                        <Image 
+                          src={product.image} 
+                          alt={product.name} 
+                          fill
+                          className="product-image"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
                         <div className="product-overlay">
                           <h5 className="product-name">{product.name}</h5>
                           <p className="product-description">{product.description}</p>
@@ -151,8 +158,14 @@ export default function ProductCarousel({
                 <div key={product.id} className="product-item">
                   <Link href={`/product/${product.id}`} className="product-card-link">
                     <div className="product-card">
-                      <div className="product-image-wrapper">
-                        <img src={product.image} alt={product.name} className="product-image" />
+                      <div className="product-image-wrapper" style={{ position: 'relative' }}>
+                        <Image 
+                          src={product.image} 
+                          alt={product.name} 
+                          fill
+                          className="product-image"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
                         <div className="product-overlay">
                           <h5 className="product-name">{product.name}</h5>
                           <p className="product-description">{product.description}</p>

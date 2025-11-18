@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app'
 import { useEffect, useRef, useState } from 'react'
 import Script from 'next/script'
+import Head from 'next/head'
 import '../styles/globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 
@@ -76,6 +77,14 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <LanguageProvider>
+      <Head>
+        {/* Preload critical CSS */}
+        <link rel="preload" href="/css/style.css" as="style" />
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" as="style" />
+        {/* DNS prefetch for external resources */}
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://flagcdn.com" />
+      </Head>
       <Script
         src="https://code.jquery.com/jquery-3.4.1.min.js"
         strategy="afterInteractive"

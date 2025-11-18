@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Image from 'next/image'
 import Layout from '@/components/Layout'
 import Link from 'next/link'
 import ProductCarousel from '@/components/ProductCarousel'
@@ -97,11 +98,15 @@ export default function ProductDetail() {
           <div className="container">
             <div className="row g-5">
               <div className="col-lg-6">
-                <div className="product-detail-image-wrapper">
-                  <img 
+                <div className="product-detail-image-wrapper" style={{ position: 'relative', minHeight: '500px' }}>
+                  <Image 
                     src={localizedProduct.image} 
                     alt={localizedProduct.name} 
+                    fill
                     className="product-detail-image"
+                    style={{ objectFit: 'cover' }}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    priority
                   />
                 </div>
               </div>

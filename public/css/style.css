@@ -1416,7 +1416,8 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
     animation: dropdownFadeIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     border: none;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    margin-top: 10px !important;
+    margin-top: 0 !important;
+    padding-top: 10px !important;
     opacity: 0;
     transform: translateY(-10px) scale(0.95);
     display: block;
@@ -1543,11 +1544,34 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
     background: white;
     left: 50% !important;
     transform: translateX(-50%) translateY(-10px) scale(0.95) !important;
+    margin-top: 0 !important;
+    padding-top: 10px !important;
 }
 
 .navbar-nav .dropdown.show .dropdown-menu,
 .navbar-nav .dropdown:hover .dropdown-menu {
     transform: translateX(-50%) translateY(0) scale(1) !important;
+    pointer-events: auto !important;
+}
+
+/* Đảm bảo không có khoảng trống giữa menu cha và menu con */
+.navbar-nav .nav-item.dropdown {
+    position: relative;
+}
+
+.navbar-nav .nav-item.dropdown .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(0) scale(0.95) !important;
+    margin-top: 0 !important;
+    padding-top: 10px !important;
+}
+
+.navbar-nav .nav-item.dropdown.show .dropdown-menu,
+.navbar-nav .nav-item.dropdown:hover .dropdown-menu {
+    transform: translateX(-50%) translateY(0) scale(1) !important;
+    pointer-events: auto !important;
 }
 
 .navbar-nav .dropdown-item {
@@ -1596,6 +1620,11 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
 }
 
 @media (max-width: 991.98px) {
+    .menu-overlay {
+        pointer-events: auto !important;
+        z-index: auto !important;
+    }
+    
     .navbar .navbar-collapse {
         position: fixed;
         top: 0;
@@ -1610,7 +1639,12 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
         align-items: stretch;
         gap: 1.5rem;
         box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
-        z-index: 11000;
+        z-index: 11000 !important;
+        pointer-events: auto !important;
+    }
+    
+    .navbar .navbar-collapse * {
+        pointer-events: auto !important;
     }
 
     .navbar .navbar-collapse.show-mobile {
@@ -1644,13 +1678,55 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
         transform: none !important;
         box-shadow: none;
         margin-top: 0.35rem !important;
-        padding-left: 0.5rem;
+        padding-left: 1.5rem;
         background: transparent;
+    }
+    
+    .navbar-nav .mobile-dropdown-menu {
+        display: block !important;
+        opacity: 1 !important;
+        max-height: 400px;
+        overflow-y: auto;
+        animation: slideDown 0.3s ease-out;
+        margin-left: 8rem;
+        padding-left: 8rem;
+    }
+    
+    .navbar-nav .mobile-dropdown-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .navbar-nav .mobile-dropdown-toggle i {
+        transition: transform 0.3s ease;
     }
 
     .navbar-nav .dropdown-item {
         color: rgba(255, 255, 255, 0.85);
         padding: 0.3rem 0;
+        padding-left: 1.5rem;
+        border-left: 2px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .navbar-nav .dropdown-item:hover {
+        color: var(--primary) !important;
+        border-left-color: var(--primary);
+        padding-left: 1.75rem;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            max-height: 400px;
+            transform: translateY(0);
+        }
     }
 
     .navbar-search {
@@ -1663,6 +1739,10 @@ a, button, .btn, .card, .product-card, .service-item, .team-item, .testimonial-i
         background: rgba(255, 255, 255, 0.08) !important;
         border: 1px solid rgba(255, 255, 255, 0.3) !important;
         color: #fff;
+    }
+    
+    .navbar-search .search-btn {
+        display: none !important;
     }
     
     .navbar-search .position-relative,

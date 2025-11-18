@@ -11,6 +11,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [openMobileDropdown, setOpenMobileDropdown] = useState<string | null>(null)
 
   const localizedProducts = useMemo(() => productSource.map(product => ({
     id: product.id,
@@ -122,6 +123,7 @@ export default function Navbar() {
 
   const closeMenu = () => {
     setIsMobileMenuOpen(false)
+    setOpenMobileDropdown(null)
   }
 
   const toggleMenu = () => {
@@ -141,6 +143,10 @@ export default function Navbar() {
     }
   }
 
+  const toggleMobileDropdown = (dropdownName: string) => {
+    setOpenMobileDropdown(prev => prev === dropdownName ? null : dropdownName)
+  }
+
   return (
     <>
       {/* Overlay */}
@@ -155,8 +161,16 @@ export default function Navbar() {
             width: '100vw',
             height: '100vh',
             background: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 1999,
-            transition: 'opacity 0.3s ease-in-out'
+            zIndex: -1,
+            transition: 'opacity 0.3s ease-in-out',
+            pointerEvents: 'auto'
+          }}
+          onTouchStart={(e) => {
+            // Ngăn overlay chặn touch events trên menu
+            const target = e.target as HTMLElement
+            if (target.closest('.navbar-collapse')) {
+              e.stopPropagation()
+            }
           }}
         />
       )}
@@ -172,11 +186,18 @@ export default function Navbar() {
           aria-label="Toggle navigation"
           aria-expanded={isMobileMenuOpen}
           onClick={toggleMenu}
-          style={{ zIndex: 2100, position: 'relative' }}
+          style={{ zIndex: 12000, position: 'relative', pointerEvents: 'auto' }}
         >
           <span className="fa fa-bars"></span>
         </button>
-        <div className={`navbar-collapse ${isMobileMenuOpen ? 'show-mobile' : ''}`}>
+        <div 
+          className={`navbar-collapse ${isMobileMenuOpen ? 'show-mobile' : ''}`}
+          style={{ 
+            zIndex: 11000,
+            pointerEvents: 'auto'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <button className="menu-close-btn d-lg-none" type="button" onClick={closeMenu} style={{ 
             position: 'absolute', 
             top: '20px', 
@@ -186,7 +207,8 @@ export default function Navbar() {
             color: 'var(--light)', 
             fontSize: '24px', 
             cursor: 'pointer',
-            zIndex: 10000 
+            zIndex: 12000,
+            pointerEvents: 'auto'
           }}>
             <i className="fa fa-times"></i>
           </button>
@@ -199,7 +221,7 @@ export default function Navbar() {
               {navContent.links.products}
             </Link>
             <div className="dropdown-menu nav-mega-menu">
-              {localizedProducts.slice(0, 6).map(product => (
+              {localizedProducts.map(product => (
                 <Link 
                   key={product.id}
                   href={`/product/${product.id}`}
@@ -211,9 +233,34 @@ export default function Navbar() {
               ))}
             </div>
           </div>
-          <Link href="/products" className={`nav-item nav-link d-lg-none ${isActive('/products')}`} onClick={handleNavItemClick}>
-            {navContent.links.products}
-          </Link>
+          {/* Mobile/Tablet Dropdown for Products */}
+          <div className="nav-item dropdown d-lg-none">
+            <div 
+              className={`nav-link ${isActive('/products')} mobile-dropdown-toggle`}
+              onClick={(e) => {
+                e.preventDefault()
+                toggleMobileDropdown('products')
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              {navContent.links.products}
+              <i className={`fa fa-chevron-${openMobileDropdown === 'products' ? 'up' : 'down'} ms-2`} style={{ fontSize: '0.8rem' }}></i>
+            </div>
+            {openMobileDropdown === 'products' && (
+              <div className="dropdown-menu nav-mega-menu mobile-dropdown-menu">
+                {localizedProducts.map(product => (
+                  <Link 
+                    key={product.id}
+                    href={`/product/${product.id}`}
+                    className="dropdown-item"
+                    onClick={handleNavItemClick}
+                  >
+                    {product.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="nav-item dropdown d-none d-lg-block">
             <Link href="/categories" className={`nav-link ${isActive('/categories')}`} onClick={handleNavItemClick}>
@@ -232,9 +279,35 @@ export default function Navbar() {
               ))}
             </div>
           </div>
-          <Link href="/categories" className={`nav-item nav-link d-lg-none ${isActive('/categories')}`} onClick={handleNavItemClick}>
-            {navContent.links.categories}
-          </Link>
+          
+          {/* Mobile/Tablet Dropdown for Categories */}
+          <div className="nav-item dropdown d-lg-none">
+            <div 
+              className={`nav-link ${isActive('/categories')} mobile-dropdown-toggle`}
+              onClick={(e) => {
+                e.preventDefault()
+                toggleMobileDropdown('categories')
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              {navContent.links.categories}
+              <i className={`fa fa-chevron-${openMobileDropdown === 'categories' ? 'up' : 'down'} ms-2`} style={{ fontSize: '0.8rem' }}></i>
+            </div>
+            {openMobileDropdown === 'categories' && (
+              <div className="dropdown-menu nav-mega-menu mobile-dropdown-menu">
+                {localizedCategories.map(category => (
+                  <Link 
+                    key={category.id}
+                    href={`/category/${category.id}`}
+                    className="dropdown-item"
+                    onClick={handleNavItemClick}
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           <Link href="/recruitment" className={`nav-item nav-link ${isActive('/recruitment')}`} onClick={handleNavItemClick}>
             {navContent.links.recruitment}

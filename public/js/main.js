@@ -33,13 +33,24 @@
     const $dropdownToggle = $(".dropdown-toggle");
     const $dropdownMenu = $(".dropdown-menu");
     const showClass = "show";
+    let hideTimeout = null;
     
     $(window).on("load resize", function() {
         if (this.matchMedia("(min-width: 992px)").matches) {
-            $dropdown.hover(
-            function() {
+            // Clear any existing handlers
+            $dropdown.off("mouseenter mouseleave");
+            $dropdownMenu.off("mouseenter mouseleave");
+            
+            // Handle hover on dropdown parent
+            $dropdown.on("mouseenter", function() {
                 const $this = $(this);
                 const $menu = $this.find($dropdownMenu);
+                
+                // Clear any pending hide timeout
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
                 
                 // Reset animation for items
                 $menu.find('.dropdown-item').css({
@@ -61,26 +72,87 @@
                         });
                     }, index * 50);
                 });
-            },
-            function() {
+            });
+            
+            // Handle mouse leave on dropdown parent
+            $dropdown.on("mouseleave", function() {
                 const $this = $(this);
                 const $menu = $this.find($dropdownMenu);
                 
-                // Fade out items
-                $menu.find('.dropdown-item').css({
-                    'opacity': '0',
-                    'transform': 'translateX(-10px)'
-                });
+                // Clear any existing timeout
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                }
                 
-                setTimeout(function() {
-                    $this.removeClass(showClass);
-                    $this.find($dropdownToggle).attr("aria-expanded", "false");
-                    $menu.removeClass(showClass);
+                // Set timeout to hide menu (allows time to move to menu)
+                hideTimeout = setTimeout(function() {
+                    // Check if mouse is still over dropdown or menu
+                    if (!$this.is(':hover') && !$menu.is(':hover')) {
+                        // Fade out items
+                        $menu.find('.dropdown-item').css({
+                            'opacity': '0',
+                            'transform': 'translateX(-10px)'
+                        });
+                        
+                        setTimeout(function() {
+                            $this.removeClass(showClass);
+                            $this.find($dropdownToggle).attr("aria-expanded", "false");
+                            $menu.removeClass(showClass);
+                        }, 200);
+                    }
+                    hideTimeout = null;
+                }, 300); // Increased delay to allow moving to menu
+            });
+            
+            // Handle hover on dropdown menu itself
+            $dropdownMenu.on("mouseenter", function() {
+                const $menu = $(this);
+                const $parent = $menu.closest($dropdown);
+                
+                // Clear any pending hide timeout
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
+                
+                // Ensure parent is shown
+                $parent.addClass(showClass);
+                $parent.find($dropdownToggle).attr("aria-expanded", "true");
+                $menu.addClass(showClass);
+            });
+            
+            // Handle mouse leave on dropdown menu
+            $dropdownMenu.on("mouseleave", function() {
+                const $menu = $(this);
+                const $parent = $menu.closest($dropdown);
+                
+                // Clear any existing timeout
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                }
+                
+                // Set timeout to hide menu
+                hideTimeout = setTimeout(function() {
+                    // Check if mouse is still over dropdown or menu
+                    if (!$parent.is(':hover') && !$menu.is(':hover')) {
+                        // Fade out items
+                        $menu.find('.dropdown-item').css({
+                            'opacity': '0',
+                            'transform': 'translateX(-10px)'
+                        });
+                        
+                        setTimeout(function() {
+                            $parent.removeClass(showClass);
+                            $parent.find($dropdownToggle).attr("aria-expanded", "false");
+                            $menu.removeClass(showClass);
+                        }, 200);
+                    }
+                    hideTimeout = null;
                 }, 200);
-            }
-            );
+            });
         } else {
             $dropdown.off("mouseenter mouseleave");
+            $dropdownMenu.off("mouseenter mouseleave");
         }
     });
     
